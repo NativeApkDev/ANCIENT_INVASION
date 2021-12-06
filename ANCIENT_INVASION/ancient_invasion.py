@@ -639,6 +639,104 @@ class Player:
         self.legendary_creature_inventory: LegendaryCreatureInventory = LegendaryCreatureInventory()
         self.player_base: PlayerBase = PlayerBase()
 
+    def make_a_wish(self, temple_of_wishes):
+        # type: (TempleOfWishes) -> bool
+        temple_of_wishes_exists: bool = False
+        for island in self.player_base.get_islands():
+            for y in range(island.ISLAND_HEIGHT):
+                for x in range(island.ISLAND_WIDTH):
+                    curr_tile: IslandTile = island.get_tile_at(x, y)
+                    if curr_tile.building == temple_of_wishes:
+                        temple_of_wishes_exists = True
+                        break
+
+        if not temple_of_wishes_exists:
+            return False
+
+        if temple_of_wishes.wishes_left <= 0:
+            return False
+
+        potential_objects: list = temple_of_wishes.get_obtainable_objects()
+        object_obtained: Item or Reward or LegendaryCreature = \
+            potential_objects[random.randint(0, len(potential_objects) - 1)]
+        if isinstance(object_obtained, Item):
+            self.add_item_to_inventory(object_obtained)
+        elif isinstance(object_obtained, Reward):
+            self.exp += object_obtained.player_reward_exp
+            self.level_up()
+            self.gold += object_obtained.player_reward_gold
+            self.gems += object_obtained.player_reward_gems
+            for legendary_creature in self.legendary_creature_inventory.get_legendary_creatures():
+                legendary_creature.exp += object_obtained.legendary_creature_reward_exp
+                legendary_creature.level_up()
+
+            for item in object_obtained.get_player_reward_items():
+                self.add_item_to_inventory(item)
+        elif isinstance(object_obtained, LegendaryCreature):
+            self.add_legendary_creature(object_obtained)
+        else:
+            pass
+
+        return True
+
+    def fuse_legendary_creatures(self, material_legendary_creatures, chosen_fusion_legendary_creature, fusion_center):
+        # type: (list, FusionLegendaryCreature, FusionCenter) -> bool
+        for material_legendary_creature in material_legendary_creatures:
+            if material_legendary_creature not in self.legendary_creature_inventory.get_legendary_creatures():
+                return False
+
+        fusion_center_exists: bool = False
+        for island in self.player_base.get_islands():
+            for y in range(island.ISLAND_HEIGHT):
+                for x in range(island.ISLAND_WIDTH):
+                    curr_tile: IslandTile = island.get_tile_at(x, y)
+                    if curr_tile.building == fusion_center:
+                        fusion_center_exists = True
+                        break
+
+        if not fusion_center_exists:
+            return False
+
+        # Checking whether the materials match the materials for the chosen fusion legendary creature or not
+        for index in range(len(material_legendary_creatures)):
+            curr_material: LegendaryCreature = material_legendary_creatures[index]
+            list_to_compare_with: list = chosen_fusion_legendary_creature.get_material_legendary_creatures()
+            material_for_comparison: LegendaryCreature = list_to_compare_with[index]
+            if not (curr_material.name == material_for_comparison.name or curr_material.name == "AWAKENED " +
+                    str(material_for_comparison.name) or material_for_comparison.name == "AWAKENED " + str(
+                        curr_material.name)):
+                # Material mismatch
+                return False
+
+        # Add the fusion legendary creature to player's legendary creature inventory and remove the fusion materials
+        self.add_legendary_creature(chosen_fusion_legendary_creature)
+        for material_legendary_creature in material_legendary_creatures:
+            self.remove_legendary_creature(material_legendary_creature)
+
+        return True
+
+    def summon_legendary_creature(self, scroll, summonhenge):
+        # type: (Scroll, Summonhenge) -> bool
+        if scroll not in self.item_inventory.get_items():
+            return False
+
+        summonhenge_exists: bool = False
+        for island in self.player_base.get_islands():
+            for y in range(island.ISLAND_HEIGHT):
+                for x in range(island.ISLAND_WIDTH):
+                    curr_tile: IslandTile = island.get_tile_at(x, y)
+                    if curr_tile.building == summonhenge:
+                        summonhenge_exists = True
+                        break
+
+        if not summonhenge_exists:
+            return False
+
+        summoned_legendary_creature_index: int = random.randint(0, len(scroll.get_potential_legendary_creatures()) - 1)
+        summoned_legendary_creature: LegendaryCreature = \
+            scroll.get_potential_legendary_creatures()[summoned_legendary_creature_index]
+        self.add_legendary_creature(summoned_legendary_creature)
+
     def give_item_to_legendary_creature(self, item, legendary_creature):
         # type: (Item, LegendaryCreature) -> bool
         if item not in self.item_inventory.get_items():
@@ -957,6 +1055,9 @@ class Player:
                 self.gold_per_second += building.gold_per_second
             elif isinstance(building, GemMine):
                 self.gems_per_second += building.gem_per_second
+            elif isinstance(building, Obstacle):
+                # Cannot build obstacle
+                return False
 
             curr_tile.building = building
             return True
@@ -1026,6 +1127,9 @@ class Player:
                     self.gold_per_second -= curr_building.gold_per_second
                 elif isinstance(curr_building, GemMine):
                     self.gems_per_second -= curr_building.gem_per_second
+                elif isinstance(curr_building, Obstacle):
+                    self.gold += curr_building.remove_gold_gain
+                    self.gems += curr_building.remove_gem_gain
 
                 curr_tile.building = None
                 return True
@@ -2338,10 +2442,10 @@ class FusionLegendaryCreature(LegendaryCreature):
     This class contains attributes of a fusion legendary creature.
     """
 
-    def __init__(self, name, element, legendary_creature_type, max_hp, max_magic_points, attack_power,
+    def __init__(self, name, element, rating, legendary_creature_type, max_hp, max_magic_points, attack_power,
                  defense, attack_speed, skills, awaken_bonus, material_legendary_creatures):
-        # type: (str, str, str, mpf, mpf, mpf, mpf, mpf, list, AwakenBonus, list) -> None
-        LegendaryCreature.__init__(self, name, element, legendary_creature_type, max_hp, max_magic_points,
+        # type: (str, str, int, str, mpf, mpf, mpf, mpf, mpf, list, AwakenBonus, list) -> None
+        LegendaryCreature.__init__(self, name, element, rating, legendary_creature_type, max_hp, max_magic_points,
                                    attack_power, defense, attack_speed, skills, awaken_bonus)
         self.__material_legendary_creatures: list = material_legendary_creatures
 
@@ -3142,6 +3246,7 @@ class Obstacle(Building):
         # type: () -> None
         Building.__init__(self, "OBSTACLE", "A removable obstacle.", mpf("0"), mpf("0"))
         self.remove_gold_gain: mpf = mpf("10") ** random.randint(5, 10)
+        self.remove_gem_gain: mpf = mpf("10") ** random.randint(2, 6)
 
 
 class TempleOfWishes(Building):
@@ -3154,6 +3259,21 @@ class TempleOfWishes(Building):
         Building.__init__(self, "TEMPLE OF WISHES", "A building where the player can make wishes to get random rewards",
                           gold_cost, gem_cost)
         self.__obtainable_objects: list = obtainable_objects
+        self.wishes_left: int = 3  # The number of wishes a player can make in a day.
+        self.already_reset: bool = False
+
+    def reset_wishes_left(self):
+        # type: () -> bool
+        time_now: datetime = datetime.now()
+        if not self.already_reset and time_now.hour > 0:
+            self.already_reset = True
+            self.wishes_left = 3
+            return True
+        return False
+
+    def restore(self):
+        # type: () -> None
+        self.already_reset = False
 
     def get_obtainable_objects(self):
         # type: () -> list
@@ -3313,6 +3433,10 @@ def main():
 
         print("Current game progress:\n", str(new_game))
     except FileNotFoundError:
+        # Clearing up the command line window
+        clear()
+
+        print("Sorry! No saved game data with player name '" + str(player_name) + "' is available!")
         name: str = input("Please enter your name: ")
         player_data: Player = Player(name)
         new_game = Game(player_data, potential_legendary_creatures, fusion_legendary_creatures, item_shop,
