@@ -1,0 +1,8 @@
+1. Version 1 (Release Date: Saturday, 11 December 2021):
+- Minimal number of legendary creatures (i.e., 6 legendary creatures of rating 1)
+- Minimal number of fusion legendary creatures (i.e., 1 fusion legendary creature of rating 1)
+- Minimal number of battle areas in the game (i.e., 1 battle area, 1 resource dungeon, and 1 item dungeon).
+- The item shop sells Energy runes of rating 1 for each possible main stat for each slot, scrolls, and shards.
+- Battle arena available.
+
+2. Version 2 (Release Date: TBA)

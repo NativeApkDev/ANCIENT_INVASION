@@ -175,7 +175,9 @@ class Action:
                                                                               enemy.resistance + enemy.resistance_up)
                                 for harmful_effect in skill_to_use.get_harmful_effects_to_enemies():
                                     if random.random() >= resist_chance:
-                                        enemy.add_harmful_effect(harmful_effect)
+                                        if not (harmful_effect.name == "OBLIVION"
+                                                and enemy.legendary_creature_type == "BOSS"):
+                                            enemy.add_harmful_effect(harmful_effect)
 
                                 if random.random() >= resist_chance:
                                     enemy.attack_gauge -= skill_to_use.enemies_attack_gauge_down
@@ -206,7 +208,9 @@ class Action:
                                                 skill.passive_skill_effect.get_harmful_effects_to_enemies():
                                             # Add negative effects to the enemy
                                             if random.random() >= resist_chance:
-                                                enemy.add_harmful_effect(harmful_effect)
+                                                if not (harmful_effect.name == "OBLIVION"
+                                                        and enemy.legendary_creature_type == "BOSS"):
+                                                    enemy.add_harmful_effect(harmful_effect)
 
                             # 3. Increase allies' attack gauge
                             for legendary_creature in user.corresponding_team.get_legendary_creatures():
@@ -256,7 +260,9 @@ class Action:
                                                                           target.resistance + target.resistance_up)
                             for harmful_effect in skill_to_use.get_harmful_effects_to_enemies():
                                 if random.random() >= resist_chance:
-                                    target.add_harmful_effect(harmful_effect)
+                                    if not (harmful_effect.name == "OBLIVION"
+                                            and target.legendary_creature_type == "BOSS"):
+                                        target.add_harmful_effect(harmful_effect)
 
                             if random.random() >= resist_chance:
                                 target.attack_gauge -= skill_to_use.enemies_attack_gauge_down
@@ -286,7 +292,9 @@ class Action:
                                             skill.passive_skill_effect.get_harmful_effects_to_enemies():
                                         # Add negative effects to the enemy
                                         if random.random() >= resist_chance:
-                                            target.add_harmful_effect(harmful_effect)
+                                            if not (harmful_effect.name == "OBLIVION"
+                                                    and target.legendary_creature_type == "BOSS"):
+                                                target.add_harmful_effect(harmful_effect)
 
                         # 3. Increase allies' attack gauge
                         for legendary_creature in user.corresponding_team.get_legendary_creatures():
@@ -589,6 +597,15 @@ class Level:
     def get_stages(self):
         # type: () -> list
         return self.__stages
+
+    def strengthen_enemies(self):
+        # type: () -> None
+        for stage in self.__stages:
+            for enemy in stage.get_enemies_list():
+                level_ups: int = 2 ** self.times_beaten
+                for i in range(level_ups):
+                    enemy.exp = enemy.required_exp
+                    enemy.level_up()
 
     def clone(self):
         # type: () -> Level
@@ -2507,14 +2524,17 @@ class ActiveSkill(Skill):
         self.damage_multiplier: DamageMultiplier = damage_multiplier if self.active_skill_type == "ATTACK" else \
             DamageMultiplier()
         self.__beneficial_effects_to_allies: list = beneficial_effects_to_allies if self.active_skill_type == \
+                                                                                    "ATTACK" or \
+                                                                                    self.active_skill_type == \
                                                                                     "ALLIES EFFECT" else []
         self.__harmful_effects_to_enemies: list = harmful_effects_to_enemies if self.active_skill_type == "ATTACK" or \
-                                                                                self.active_skill_type == "ENEMIES EFFECT" else []
+                                                                                self.active_skill_type == \
+                                                                                "ENEMIES EFFECT" else []
         self.allies_attack_gauge_up: mpf = allies_attack_gauge_up if self.active_skill_type == \
                                                                      "ALLIES EFFECT" else mpf("0")
         self.enemies_attack_gauge_down: mpf = enemies_attack_gauge_down if self.active_skill_type == "ATTACK" or \
-                                                                           self.active_skill_type == "ENEMIES EFFECT" else mpf(
-            "0")
+                                                                           self.active_skill_type == "ENEMIES EFFECT" \
+            else mpf("0")
         self.heal_amount_to_allies: mpf = heal_amount_to_allies if self.active_skill_type == \
                                                                    "HEAL" else mpf("0")
         self.does_ignore_enemies_defense: bool = does_ignore_enemies_defense
@@ -2563,10 +2583,12 @@ class PassiveSkillEffect:
     This class contains attributes of the effect of a passive skill.
     """
 
-    def __init__(self, max_hp_percentage_up, max_magic_points_percentage_up, attack_power_percentage_up,
-                 defense_percentage_up, attack_speed_percentage_up, crit_rate_up, crit_damage_up, resistance_up,
-                 accuracy_up, extra_turn_chance_up, beneficial_effects_to_allies, harmful_effects_to_enemies,
-                 allies_attack_gauge_up, enemies_attack_gauge_down, heal_amount_to_allies):
+    def __init__(self, max_hp_percentage_up=mpf("0"), max_magic_points_percentage_up=mpf("0"),
+                 attack_power_percentage_up=mpf("0"), defense_percentage_up=mpf("0"),
+                 attack_speed_percentage_up=mpf("0"), crit_rate_up=mpf("0"), crit_damage_up=mpf("0"),
+                 resistance_up=mpf("0"), accuracy_up=mpf("0"), extra_turn_chance_up=mpf("0"),
+                 beneficial_effects_to_allies=mpf("0"), harmful_effects_to_enemies=mpf("0"),
+                 allies_attack_gauge_up=mpf("0"), enemies_attack_gauge_down=mpf("0"), heal_amount_to_allies=mpf("0")):
         # type: (mpf, mpf, mpf, mpf, mpf, mpf, mpf, mpf, mpf, mpf, list, list, mpf, mpf, mpf) -> None
         self.max_hp_percentage_up: mpf = max_hp_percentage_up
         self.max_magic_points_percentage_up: mpf = max_magic_points_percentage_up
@@ -2613,9 +2635,10 @@ class LeaderSkillEffect:
     This class contains attributes of the effect of a leader skill.
     """
 
-    def __init__(self, max_hp_percentage_up, max_magic_points_percentage_up, attack_power_percentage_up,
-                 defense_percentage_up, attack_speed_percentage_up, crit_rate_up, crit_damage_up, resistance_up,
-                 accuracy_up):
+    def __init__(self, max_hp_percentage_up=mpf("0"), max_magic_points_percentage_up=mpf("0"),
+                 attack_power_percentage_up=mpf("0"), defense_percentage_up=mpf("0"),
+                 attack_speed_percentage_up=mpf("0"), crit_rate_up=mpf("0"), crit_damage_up=mpf("0"),
+                 resistance_up=mpf("0"), accuracy_up=mpf("0")):
         # type: (mpf, mpf, mpf, mpf, mpf, mpf, mpf, mpf, mpf) -> None
         self.max_hp_percentage_up: mpf = max_hp_percentage_up
         self.max_magic_points_percentage_up: mpf = max_magic_points_percentage_up
@@ -3389,34 +3412,258 @@ def main():
     print("This game is a turn-based strategy RPG where the player brings legendary creatures to battles where ")
     print("legendary creatures take turns in making moves.")
 
-    # TODO: continue with initialisation of variables used throughout the main function.
+    # Initialising a list of skills that all legendary creatures have.
+    skills_list: list = [
+        ActiveSkill("SINGLE-TARGET ATTACK SKILL #1", "Normal Single-Target Attack Skill", "ATTACK", False,
+                    mpf("1e3"), 2, DamageMultiplier(multiplier_to_self_attack_power=mpf("3.5")), [], [],
+                    mpf("0"), mpf("0"), mpf("0"), False, False, False),
+        ActiveSkill("SINGLE-TARGET ATTACK SKILL #2", "Strong Single-Target Attack Skill", "ATTACK", False,
+                    mpf("1e10"), 4, DamageMultiplier(multiplier_to_self_attack_power=mpf("10.5")), [], [],
+                    mpf("0"), mpf("0"), mpf("0"), False, False, False),
+        ActiveSkill("SINGLE-TARGET ATTACK SKILL #3", "Ultimate Single-Target Attack Skill", "ATTACK", False,
+                    mpf("1e30"), 8, DamageMultiplier(multiplier_to_self_attack_power=mpf("31.5")), [], [],
+                    mpf("0"), mpf("0"), mpf("0"), False, False, False),
+        ActiveSkill("MULTI-TARGET ATTACK SKILL #1", "Normal Multi-Target Attack Skill", "ATTACK", True,
+                    mpf("1e3"), 2, DamageMultiplier(multiplier_to_self_attack_power=mpf("0.7")), [], [],
+                    mpf("0"), mpf("0"), mpf("0"), False, False, False),
+        ActiveSkill("MULTI-TARGET ATTACK SKILL #2", "Strong Multi-Target Attack Skill", "ATTACK", True,
+                    mpf("1e10"), 4, DamageMultiplier(multiplier_to_self_attack_power=mpf("2.1")), [], [],
+                    mpf("0"), mpf("0"), mpf("0"), False, False, False),
+        ActiveSkill("MULTI-TARGET ATTACK SKILL #3", "Ultimate Multi-Target Attack Skill", "ATTACK", True,
+                    mpf("1e30"), 8, DamageMultiplier(multiplier_to_self_attack_power=mpf("6.3")), [], [],
+                    mpf("0"), mpf("0"), mpf("0"), False, False, False),
+        ActiveSkill("HEAL SKILL #1", "First Heal Skill", "HEAL", True, mpf("1e3"), 2, DamageMultiplier(), [], [],
+                    mpf("0"), mpf("0"), mpf("2e4"), False, False, False),
+        ActiveSkill("HEAL SKILL #2", "Better Heal Skill", "HEAL", True, mpf("1e10"), 4, DamageMultiplier(), [], [],
+                    mpf("0"), mpf("0"), mpf("2e12"), False, False, False),
+        ActiveSkill("HEAL SKILL #3", "Ultimate Heal Skill", "HEAL", True, mpf("1e30"), 8, DamageMultiplier(), [], [],
+                    mpf("0"), mpf("0"), mpf("2e36"), False, False, False),
+        PassiveSkill("EXTRA TURN PASSIVE SKILL", "Increase player's extra turn change by 15%.",
+                     PassiveSkillEffect(extra_turn_chance_up=mpf("0.15"))),
+        LeaderSkill("ATTACK LEADER SKILL", "Increase all allies' attack power by 20%.",
+                    LeaderSkillEffect(attack_power_percentage_up=mpf("20")))
+    ]
+
     # Initialising potential legendary creatures in this game.
     potential_legendary_creatures: list = [
-
+        LegendaryCreature("Hellchnoth", "FIRE", 1, "NORMAL", mpf("4.95e4"), mpf("4.78e4"), mpf("9.33e3"), mpf("8.74e3"),
+                          mpf("109"), skills_list, AwakenBonus(mpf("125"), mpf("125"), mpf("125"), mpf("125"),
+                                                               mpf("0"), mpf("0.15"), mpf("0"), mpf("0"), mpf("0"),
+                                                               ActiveSkill("SINGLE-TARGET ATTACK SKILL #4",
+                                                                           "Extreme Single-Target Attack Skill",
+                                                                           "ATTACK", False,
+                                                                           mpf("1e90"), 8, DamageMultiplier(
+                                                                       multiplier_to_self_attack_power=mpf("94.5")), [],
+                                                                           [],
+                                                                           mpf("0"), mpf("0"), mpf("0"), False, False,
+                                                                           False))),
+        LegendaryCreature("Chichoo", "WATER", 1, "NORMAL", mpf("5.14e4"), mpf("5.07e4"), mpf("8.12e3"), mpf("8.87e3"),
+                          mpf("107"), skills_list, AwakenBonus(mpf("125"), mpf("125"), mpf("125"), mpf("125"),
+                                                               mpf("0"), mpf("0"), mpf("0"), mpf("0.15"), mpf("0"),
+                                                               ActiveSkill("SINGLE-TARGET ATTACK SKILL #4",
+                                                                           "Extreme Single-Target Attack Skill",
+                                                                           "ATTACK", False,
+                                                                           mpf("1e90"), 8, DamageMultiplier(
+                                                                       multiplier_to_self_attack_power=mpf("94.5")), [],
+                                                                           [],
+                                                                           mpf("0"), mpf("0"), mpf("0"), False, False,
+                                                                           False))),
+        LegendaryCreature("Hylso", "WIND", 1, "NORMAL", mpf("4.78e4"), mpf("4.53e4"), mpf("9.47e3"), mpf("9.01e3"),
+                          mpf("108"), skills_list, AwakenBonus(mpf("125"), mpf("125"), mpf("125"), mpf("125"),
+                                                               mpf("0"), mpf("0"), mpf("0.5"), mpf("0"), mpf("0"),
+                                                               ActiveSkill("SINGLE-TARGET ATTACK SKILL #4",
+                                                                           "Extreme Single-Target Attack Skill",
+                                                                           "ATTACK", False,
+                                                                           mpf("1e90"), 8, DamageMultiplier(
+                                                                       multiplier_to_self_attack_power=mpf("94.5")), [],
+                                                                           [],
+                                                                           mpf("0"), mpf("0"), mpf("0"), False, False,
+                                                                           False))),
+        LegendaryCreature("Banngod", "LIGHT", 1, "NORMAL", mpf("4.57e4"), mpf("5.13e4"), mpf("9.6e3"), mpf("8.47e3"),
+                          mpf("111"), skills_list, AwakenBonus(mpf("125"), mpf("125"), mpf("125"), mpf("125"),
+                                                               mpf("0"), mpf("0"), mpf("0.5"), mpf("0"), mpf("0"),
+                                                               ActiveSkill("SINGLE-TARGET ATTACK SKILL #4",
+                                                                           "Extreme Single-Target Attack Skill",
+                                                                           "ATTACK", False,
+                                                                           mpf("1e90"), 8, DamageMultiplier(
+                                                                       multiplier_to_self_attack_power=mpf("94.5")), [],
+                                                                           [],
+                                                                           mpf("0"), mpf("0"), mpf("0"), False, False,
+                                                                           False))),
+        LegendaryCreature("Manrud", "DARK", 1, "NORMAL", mpf("5.24e4"), mpf("5.17e4"), mpf("8.08e3"), mpf("8.27e3"),
+                          mpf("110"), skills_list, AwakenBonus(mpf("125"), mpf("125"), mpf("125"), mpf("125"),
+                                                               mpf("0"), mpf("0"), mpf("0"), mpf("0.15"), mpf("0"),
+                                                               ActiveSkill("SINGLE-TARGET ATTACK SKILL #4",
+                                                                           "Extreme Single-Target Attack Skill",
+                                                                           "ATTACK", False,
+                                                                           mpf("1e90"), 8, DamageMultiplier(
+                                                                       multiplier_to_self_attack_power=mpf("94.5")), [],
+                                                                           [],
+                                                                           mpf("0"), mpf("0"), mpf("0"), False, False,
+                                                                           False))),
+        LegendaryCreature("Avaffaip", "NEUTRAL", 1, "NORMAL", mpf("5.19e4"), mpf("5.07e4"), mpf("8.57e3"), mpf("8.66e3"),
+                          mpf("112"), skills_list, AwakenBonus(mpf("125"), mpf("125"), mpf("125"), mpf("125"),
+                                                               mpf("0"), mpf("0"), mpf("0"), mpf("0.15"), mpf("0"),
+                                                               ActiveSkill("SINGLE-TARGET ATTACK SKILL #4",
+                                                                           "Extreme Single-Target Attack Skill",
+                                                                           "ATTACK", False,
+                                                                           mpf("1e90"), 8, DamageMultiplier(
+                                                                       multiplier_to_self_attack_power=mpf("94.5")), [],
+                                                                           [],
+                                                                           mpf("0"), mpf("0"), mpf("0"), False, False,
+                                                                           False)))
     ]
 
     # Initialising legendary creatures which can be obtained from fusions.
     fusion_legendary_creatures: list = [
-
+        FusionLegendaryCreature("Meppee", "LIGHT", 1, "NORMAL", mpf("2.5e5"), mpf("2.47e5"), mpf("4.43e4"), mpf("4.35e4"),
+                                mpf("109"), skills_list, AwakenBonus(mpf("125"), mpf("125"), mpf("125"), mpf("125"),
+                                                               mpf("0"), mpf("0"), mpf("0.5"), mpf("0"), mpf("0"),
+                                                               ActiveSkill("SINGLE-TARGET ATTACK SKILL #4",
+                                                                           "Extreme Single-Target Attack Skill",
+                                                                           "ATTACK", False,
+                                                                           mpf("1e90"), 8, DamageMultiplier(
+                                                                       multiplier_to_self_attack_power=mpf("94.5")), [],
+                                                                           [],
+                                                                           mpf("0"), mpf("0"), mpf("0"), False, False,
+                                                                           False)),
+                                [potential_legendary_creatures[x] for x in range(1, len(potential_legendary_creatures))])
     ]
 
     # Initialising the item shop
     item_shop: ItemShop = ItemShop([
-
+        Rune("1-STAR ENERGY RUNE - SLOT 1", "An Energy rune of rating 1 at slot 1", mpf("1e6"), mpf("0"), 1, 1,
+             "ENERGY", "ATK"),
+        Rune("1-STAR ENERGY RUNE - SLOT 2", "An Energy rune of rating 1 at slot 2", mpf("1e6"), mpf("0"), 1, 2,
+             "ENERGY", "HP"),
+        Rune("1-STAR ENERGY RUNE - SLOT 2", "An Energy rune of rating 1 at slot 2", mpf("1e6"), mpf("0"), 1, 2,
+             "ENERGY", "HP%"),
+        Rune("1-STAR ENERGY RUNE - SLOT 2", "An Energy rune of rating 1 at slot 2", mpf("1e6"), mpf("0"), 1, 2,
+             "ENERGY", "MP"),
+        Rune("1-STAR ENERGY RUNE - SLOT 2", "An Energy rune of rating 1 at slot 2", mpf("1e6"), mpf("0"), 1, 2,
+             "ENERGY", "MP%"),
+        Rune("1-STAR ENERGY RUNE - SLOT 2", "An Energy rune of rating 1 at slot 2", mpf("1e6"), mpf("0"), 1, 2,
+             "ENERGY", "ATK"),
+        Rune("1-STAR ENERGY RUNE - SLOT 2", "An Energy rune of rating 1 at slot 2", mpf("1e6"), mpf("0"), 1, 2,
+             "ENERGY", "ATK%"),
+        Rune("1-STAR ENERGY RUNE - SLOT 2", "An Energy rune of rating 1 at slot 2", mpf("1e6"), mpf("0"), 1, 2,
+             "ENERGY", "DEF"),
+        Rune("1-STAR ENERGY RUNE - SLOT 2", "An Energy rune of rating 1 at slot 2", mpf("1e6"), mpf("0"), 1, 2,
+             "ENERGY", "DEF%"),
+        Rune("1-STAR ENERGY RUNE - SLOT 2", "An Energy rune of rating 1 at slot 2", mpf("1e6"), mpf("0"), 1, 2,
+             "ENERGY", "SPD"),
+        Rune("1-STAR ENERGY RUNE - SLOT 2", "An Energy rune of rating 1 at slot 2", mpf("1e6"), mpf("0"), 1, 2,
+             "ENERGY", "CR"),
+        Rune("1-STAR ENERGY RUNE - SLOT 2", "An Energy rune of rating 1 at slot 2", mpf("1e6"), mpf("0"), 1, 2,
+             "ENERGY", "CD"),
+        Rune("1-STAR ENERGY RUNE - SLOT 2", "An Energy rune of rating 1 at slot 2", mpf("1e6"), mpf("0"), 1, 2,
+             "ENERGY", "RES"),
+        Rune("1-STAR ENERGY RUNE - SLOT 2", "An Energy rune of rating 1 at slot 2", mpf("1e6"), mpf("0"), 1, 2,
+             "ENERGY", "ACC"),
+        Rune("1-STAR ENERGY RUNE - SLOT 3", "An Energy rune of rating 1 at slot 3", mpf("1e6"), mpf("0"), 1, 3,
+             "ENERGY", "DEF"),
+        Rune("1-STAR ENERGY RUNE - SLOT 4", "An Energy rune of rating 1 at slot 4", mpf("1e6"), mpf("0"), 1, 4,
+             "ENERGY", "HP"),
+        Rune("1-STAR ENERGY RUNE - SLOT 4", "An Energy rune of rating 1 at slot 4", mpf("1e6"), mpf("0"), 1, 4,
+             "ENERGY", "HP%"),
+        Rune("1-STAR ENERGY RUNE - SLOT 4", "An Energy rune of rating 1 at slot 4", mpf("1e6"), mpf("0"), 1, 4,
+             "ENERGY", "MP"),
+        Rune("1-STAR ENERGY RUNE - SLOT 4", "An Energy rune of rating 1 at slot 4", mpf("1e6"), mpf("0"), 1, 4,
+             "ENERGY", "MP%"),
+        Rune("1-STAR ENERGY RUNE - SLOT 4", "An Energy rune of rating 1 at slot 4", mpf("1e6"), mpf("0"), 1, 4,
+             "ENERGY", "ATK"),
+        Rune("1-STAR ENERGY RUNE - SLOT 4", "An Energy rune of rating 1 at slot 4", mpf("1e6"), mpf("0"), 1, 4,
+             "ENERGY", "ATK%"),
+        Rune("1-STAR ENERGY RUNE - SLOT 4", "An Energy rune of rating 1 at slot 4", mpf("1e6"), mpf("0"), 1, 4,
+             "ENERGY", "DEF"),
+        Rune("1-STAR ENERGY RUNE - SLOT 4", "An Energy rune of rating 1 at slot 4", mpf("1e6"), mpf("0"), 1, 4,
+             "ENERGY", "DEF%"),
+        Rune("1-STAR ENERGY RUNE - SLOT 4", "An Energy rune of rating 1 at slot 4", mpf("1e6"), mpf("0"), 1, 4,
+             "ENERGY", "SPD"),
+        Rune("1-STAR ENERGY RUNE - SLOT 4", "An Energy rune of rating 1 at slot 4", mpf("1e6"), mpf("0"), 1, 4,
+             "ENERGY", "CR"),
+        Rune("1-STAR ENERGY RUNE - SLOT 4", "An Energy rune of rating 1 at slot 4", mpf("1e6"), mpf("0"), 1, 4,
+             "ENERGY", "CD"),
+        Rune("1-STAR ENERGY RUNE - SLOT 4", "An Energy rune of rating 1 at slot 4", mpf("1e6"), mpf("0"), 1, 4,
+             "ENERGY", "RES"),
+        Rune("1-STAR ENERGY RUNE - SLOT 4", "An Energy rune of rating 1 at slot 4", mpf("1e6"), mpf("0"), 1, 4,
+             "ENERGY", "ACC"),
+        Rune("1-STAR ENERGY RUNE - SLOT 5", "An Energy rune of rating 1 at slot 5", mpf("1e6"), mpf("0"), 1, 5,
+             "ENERGY", "HP"),
+        Rune("1-STAR ENERGY RUNE - SLOT 6", "An Energy rune of rating 1 at slot 6", mpf("1e6"), mpf("0"), 1, 6,
+             "ENERGY", "HP"),
+        Rune("1-STAR ENERGY RUNE - SLOT 6", "An Energy rune of rating 1 at slot 6", mpf("1e6"), mpf("0"), 1, 6,
+             "ENERGY", "HP%"),
+        Rune("1-STAR ENERGY RUNE - SLOT 6", "An Energy rune of rating 1 at slot 6", mpf("1e6"), mpf("0"), 1, 6,
+             "ENERGY", "MP"),
+        Rune("1-STAR ENERGY RUNE - SLOT 6", "An Energy rune of rating 1 at slot 6", mpf("1e6"), mpf("0"), 1, 6,
+             "ENERGY", "MP%"),
+        Rune("1-STAR ENERGY RUNE - SLOT 6", "An Energy rune of rating 1 at slot 6", mpf("1e6"), mpf("0"), 1, 6,
+             "ENERGY", "ATK"),
+        Rune("1-STAR ENERGY RUNE - SLOT 6", "An Energy rune of rating 1 at slot 6", mpf("1e6"), mpf("0"), 1, 6,
+             "ENERGY", "ATK%"),
+        Rune("1-STAR ENERGY RUNE - SLOT 6", "An Energy rune of rating 1 at slot 6", mpf("1e6"), mpf("0"), 1, 6,
+             "ENERGY", "DEF"),
+        Rune("1-STAR ENERGY RUNE - SLOT 6", "An Energy rune of rating 1 at slot 6", mpf("1e6"), mpf("0"), 1, 6,
+             "ENERGY", "DEF%"),
+        Rune("1-STAR ENERGY RUNE - SLOT 6", "An Energy rune of rating 1 at slot 6", mpf("1e6"), mpf("0"), 1, 6,
+             "ENERGY", "SPD"),
+        Rune("1-STAR ENERGY RUNE - SLOT 6", "An Energy rune of rating 1 at slot 6", mpf("1e6"), mpf("0"), 1, 6,
+             "ENERGY", "CR"),
+        Rune("1-STAR ENERGY RUNE - SLOT 6", "An Energy rune of rating 1 at slot 6", mpf("1e6"), mpf("0"), 1, 6,
+             "ENERGY", "CD"),
+        Rune("1-STAR ENERGY RUNE - SLOT 6", "An Energy rune of rating 1 at slot 6", mpf("1e6"), mpf("0"), 1, 6,
+             "ENERGY", "RES"),
+        Rune("1-STAR ENERGY RUNE - SLOT 6", "An Energy rune of rating 1 at slot 6", mpf("1e6"), mpf("0"), 1, 6,
+             "ENERGY", "ACC"),
+        AwakenShard(mpf("1e6"), mpf("10"), "Hellchnoth"),
+        AwakenShard(mpf("1e6"), mpf("10"), "Chichoo"),
+        AwakenShard(mpf("1e6"), mpf("10"), "Hylso"),
+        AwakenShard(mpf("1e6"), mpf("10"), "Banngod"),
+        AwakenShard(mpf("1e6"), mpf("10"), "Manrud"),
+        AwakenShard(mpf("1e6"), mpf("10"), "Avaffaip"),
+        AwakenShard(mpf("1e6"), mpf("10"), "Meppee"),
+        EXPShard(mpf("1e6"), mpf("10"), mpf("1e5")),
+        LevelUpShard(mpf("1e6"), mpf("10")),
+        SkillLevelUpShard(mpf("1e6"), mpf("10")),
+        Scroll("UNKNOWN", "A scroll to summon 1-STAR to 3-STAR legendary creatures.", mpf("1e6"), mpf("10"),
+               potential_legendary_creatures)
     ])
 
     # Initialising potential CPU players the player can face
-
     potential_cpu_players: list = [
-
+        Player("CPU #1"),
+        Player("CPU #2"),
+        Player("CPU #3")
     ]
+
+    potential_cpu_players[0].battle_team = Team([potential_legendary_creatures[0:5]])
+    potential_cpu_players[1].battle_team = Team([potential_legendary_creatures[1:6]])
+    potential_cpu_players[2].battle_team = Team([potential_legendary_creatures[x] for x in [0, 2, 3, 4, 5]])
 
     # Initialising the battle arena
     battle_arena: Arena = Arena(potential_cpu_players)
 
     # Initialising a list of battle areas in this game.
     battle_areas: list = [
-
+        MapArea("DHUULOW BUSH", [
+            Level("DHUULOW BUSH - ENTRANCE", [
+                Stage(potential_legendary_creatures[1:6]),
+                Stage(potential_legendary_creatures[0:5])
+            ], Reward(mpf("1e5"), mpf("1e5"), mpf("1"), mpf("1e5")))
+        ], Reward(mpf("1e5"), mpf("1e5"), mpf("1"), mpf("1e5")), "EASY"),
+        Dungeon("ITEM DUNGEON 1", [
+            Level("ID1 PART 1", [
+                Stage(potential_legendary_creatures[1:6]),
+                Stage(potential_legendary_creatures[0:5])
+            ], Reward(mpf("1e5"), mpf("1e5"), mpf("1"), mpf("1e5")))
+        ], Reward(mpf("1e5"), mpf("1e5"), mpf("1"), mpf("1e5")), "ITEM"),
+        Dungeon("RESOURCE DUNGEON 1", [
+            Level("RD1 PART 1", [
+                Stage(potential_legendary_creatures[1:6]),
+                Stage(potential_legendary_creatures[0:5])
+            ], Reward(mpf("1e5"), mpf("1e5"), mpf("1"), mpf("1e5")))
+        ], Reward(mpf("1e5"), mpf("1e5"), mpf("1"), mpf("1e5")), "RESOURCE")
     ]
 
     # Initialising variable for the saved game data
@@ -3455,6 +3702,12 @@ def main():
         new_now: datetime = datetime.now()
 
         # TODO: continue to add code related to gameplay
+        time_difference = new_now - old_now
+        seconds: int = time_difference.seconds
+        old_now = new_now
+
+        # Increase player's EXP, gold, and gems
+        new_game.player_data.exp += new_game.player_data.exp_per_second * seconds
 
         print("Enter 'Y' for yes.")
         print("Enter anything else for no.")
