@@ -4126,7 +4126,6 @@ def main():
             save_game_data(new_game, file_name)
             sys.exit()
         else:
-            # TODO: add code for each action chosen by the player
             if action == "VIEW STATS":
                 # Clearing the command line window
                 clear()
