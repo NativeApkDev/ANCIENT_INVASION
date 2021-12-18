@@ -115,10 +115,8 @@ class Action:
         self.name: str = name if name in self.POSSIBLE_NAMES else self.POSSIBLE_NAMES[0]
 
     def __str__(self):
-        return '%s(%s)' % (
-            type(self).__name__,
-            ', '.join('%s=%s' % item for item in vars(self).items())
-        )
+        # type: () -> str
+        return str(self.name)
 
     def execute(self, user, target, skill_to_use=None):
         # type: (LegendaryCreature, LegendaryCreature, Skill or None) -> bool
@@ -408,12 +406,6 @@ class Arena:
             potential_opponents = []
         self.__potential_opponents: list = potential_opponents
 
-    def __str__(self):
-        return '%s(%s)' % (
-            type(self).__name__,
-            ', '.join('%s=%s' % item for item in vars(self).items())
-        )
-
     def add_opponent(self, opponent):
         # type: (CPU) -> bool
         if opponent not in self.__potential_opponents:
@@ -457,12 +449,6 @@ class AwakenBonus:
         self.accuracy_up: mpf = accuracy_up
         self.new_skill_gained: Skill = new_skill_gained
 
-    def __str__(self):
-        return '%s(%s)' % (
-            type(self).__name__,
-            ', '.join('%s=%s' % item for item in vars(self).items())
-        )
-
     def clone(self):
         # type: () -> AwakenBonus
         return copy.deepcopy(self)
@@ -489,10 +475,19 @@ class Battle:
         self.winner: Team or None = None
 
     def __str__(self):
-        return '%s(%s)' % (
-            type(self).__name__,
-            ', '.join('%s=%s' % item for item in vars(self).items())
-        )
+        # type: () -> str
+        res: str = "Below is a list of legendary creatures in team 1.\n"
+        for legendary_creature in self.team1.get_legendary_creatures():
+            res += str(legendary_creature) + "\n"
+
+        res += "Below is a list of legendary creatures in team 2.\n"
+        for legendary_creature in self.team2.get_legendary_creatures():
+            res += str(legendary_creature) + "\n"
+
+        res += "Rewards for winning the battle:\n" + str(self.reward) + "\n"
+        res += "Winner of the battle: " + str(self.winner) + "\n"
+        res += "Moving legendary creature: " + str(self.whose_turn) + "\n"
+        return res
 
     def get_someone_to_move(self):
         # type: () -> None
@@ -551,12 +546,6 @@ class BattleArea:
         self.clear_reward: Reward = clear_reward
         self.has_been_cleared: bool = False
 
-    def __str__(self):
-        return '%s(%s)' % (
-            type(self).__name__,
-            ', '.join('%s=%s' % item for item in vars(self).items())
-        )
-
     def get_levels(self):
         # type: () -> list
         return self.__levels
@@ -578,12 +567,6 @@ class MapArea(BattleArea):
         BattleArea.__init__(self, name, levels, clear_reward)
         self.mode: str = mode if mode in self.POSSIBLE_MODES else self.POSSIBLE_MODES[0]
 
-    def __str__(self):
-        return '%s(%s)' % (
-            type(self).__name__,
-            ', '.join('%s=%s' % item for item in vars(self).items())
-        )
-
 
 class Dungeon(BattleArea):
     """
@@ -596,12 +579,6 @@ class Dungeon(BattleArea):
         # type: (str, list, Reward, str) -> None
         BattleArea.__init__(self, name, levels, clear_reward)
         self.dungeon_type: str = dungeon_type if dungeon_type in self.POSSIBLE_TYPES else self.POSSIBLE_TYPES[0]
-
-    def __str__(self):
-        return '%s(%s)' % (
-            type(self).__name__,
-            ', '.join('%s=%s' % item for item in vars(self).items())
-        )
 
 
 class Level:
@@ -616,12 +593,6 @@ class Level:
         self.is_cleared: bool = False
         self.clear_reward: Reward = clear_reward
         self.times_beaten: int = 0  # initial value
-
-    def __str__(self):
-        return '%s(%s)' % (
-            type(self).__name__,
-            ', '.join('%s=%s' % item for item in vars(self).items())
-        )
 
     def get_stages(self):
         # type: () -> list
@@ -651,12 +622,6 @@ class Stage:
         self.__enemies_list: list = enemies_list
         self.is_cleared: bool = False
 
-    def __str__(self):
-        return '%s(%s)' % (
-            type(self).__name__,
-            ', '.join('%s=%s' % item for item in vars(self).items())
-        )
-
     def get_enemies_list(self):
         # type: () -> list
         return self.__enemies_list
@@ -679,9 +644,9 @@ class Player:
         self.exp: mpf = mpf("0")
         self.required_exp: mpf = mpf("1e6")
         self.exp_per_second: mpf = mpf("0")
-        self.gold: mpf = mpf("5e6")
+        self.gold: mpf = mpf("0")
         self.gold_per_second: mpf = mpf("0")
-        self.gems: mpf = mpf("100")
+        self.gems: mpf = mpf("0")
         self.gems_per_second: mpf = mpf("0")
         self.arena_points: int = 1000
         self.arena_wins: int = 0
@@ -690,12 +655,6 @@ class Player:
         self.item_inventory: ItemInventory = ItemInventory()
         self.legendary_creature_inventory: LegendaryCreatureInventory = LegendaryCreatureInventory()
         self.player_base: PlayerBase = PlayerBase()
-
-    def __str__(self):
-        return '%s(%s)' % (
-            type(self).__name__,
-            ', '.join('%s=%s' % item for item in vars(self).items())
-        )
 
     def make_a_wish(self, temple_of_wishes):
         # type: (TempleOfWishes) -> bool
@@ -793,7 +752,6 @@ class Player:
         summoned_legendary_creature_index: int = random.randint(0, len(scroll.get_potential_legendary_creatures()) - 1)
         summoned_legendary_creature: LegendaryCreature = \
             scroll.get_potential_legendary_creatures()[summoned_legendary_creature_index]
-        print("You have summoned " + str(summoned_legendary_creature.name) + "!!!")
         self.add_legendary_creature(summoned_legendary_creature)
 
     def give_item_to_legendary_creature(self, item, legendary_creature):
@@ -807,23 +765,19 @@ class Player:
         if isinstance(item, EXPShard):
             legendary_creature.exp += item.exp_granted
             legendary_creature.level_up()
-            self.remove_item_from_inventory(item)
             return True
         elif isinstance(item, LevelUpShard):
             legendary_creature.exp = legendary_creature.required_exp
             legendary_creature.level_up()
-            self.remove_item_from_inventory(item)
             return True
         elif isinstance(item, SkillLevelUpShard):
             skill_index: int = random.randint(0, len(legendary_creature.get_skills()) - 1)
             curr_skill: Skill = legendary_creature.get_skills()[skill_index]
             curr_skill.level_up()
-            self.remove_item_from_inventory(item)
             return True
         elif isinstance(item, AwakenShard):
             if item.legendary_creature_name == legendary_creature.name:
                 legendary_creature.awaken()
-                self.remove_item_from_inventory(item)
                 return True
             return False
         return False
@@ -885,7 +839,7 @@ class Player:
         power_up_circle.deselect_legendary_creature_to_power_up()
         power_up_circle.select_legendary_creature_to_power_up(legendary_creature_to_evolve)
         power_up_circle.set_material_legendary_creatures(material_legendary_creatures)
-        legendary_creature_to_evolve = power_up_circle.execute_evolution()
+        legendary_creature_to_evolve = power_up_circle.execute_evolve()
         assert isinstance(legendary_creature_to_evolve, LegendaryCreature), "Legendary creature evolution failed!"
         for legendary_creature in material_legendary_creatures:
             self.remove_legendary_creature(legendary_creature)
@@ -912,7 +866,6 @@ class Player:
 
         if training_area.add_legendary_creature(legendary_creature):
             legendary_creature.exp_per_second += training_area.legendary_creature_exp_per_second
-            legendary_creature.placed_in_training_area = True
             return True
         return False
 
@@ -936,7 +889,6 @@ class Player:
 
         if training_area.remove_legendary_creature(legendary_creature):
             legendary_creature.exp_per_second -= training_area.legendary_creature_exp_per_second
-            legendary_creature.placed_in_training_area = False
             return True
         return False
 
@@ -1283,11 +1235,6 @@ class Player:
 
     def remove_item_from_inventory(self, item):
         # type: (Item) -> bool
-        if isinstance(item, Rune):
-            for legendary_creature in self.legendary_creature_inventory.get_legendary_creatures():
-                if item in legendary_creature.get_runes().values():
-                    return False
-
         return self.item_inventory.remove_item(item)
 
     def add_legendary_creature(self, legendary_creature):
@@ -1333,12 +1280,6 @@ class CPU(Player):
         self.next_available_time: datetime or None = None
         self.times_beaten: int = 0  # initial value
 
-    def __str__(self):
-        return '%s(%s)' % (
-            type(self).__name__,
-            ', '.join('%s=%s' % item for item in vars(self).items())
-        )
-
 
 class LegendaryCreatureInventory:
     """
@@ -1350,10 +1291,12 @@ class LegendaryCreatureInventory:
         self.__legendary_creatures: list = []  # initial value
 
     def __str__(self):
-        return '%s(%s)' % (
-            type(self).__name__,
-            ', '.join('%s=%s' % item for item in vars(self).items())
-        )
+        # type: () -> str
+        res: str = "Below is a list of legendary creatures in this inventory.\n"  # initial value
+        for legendary_creature in self.__legendary_creatures:
+            res += str(legendary_creature) + "\n"
+
+        return res
 
     def add_legendary_creature(self, legendary_creature):
         # type: (LegendaryCreature) -> None
@@ -1385,10 +1328,12 @@ class ItemInventory:
         self.__items: list = []  # initial value
 
     def __str__(self):
-        return '%s(%s)' % (
-            type(self).__name__,
-            ', '.join('%s=%s' % item for item in vars(self).items())
-        )
+        # type: () -> str
+        res: str = "Below is a list of items in this inventory.\n"
+        for item in self.__items:
+            res += str(item) + "\n"
+
+        return res
 
     def add_item(self, item):
         # type: (Item) -> None
@@ -1425,10 +1370,15 @@ class Item:
         self.sell_gem_gain: mpf = gem_cost / 5
 
     def __str__(self):
-        return '%s(%s)' % (
-            type(self).__name__,
-            ', '.join('%s=%s' % item for item in vars(self).items())
-        )
+        # type: () -> str
+        res: str = ""  # initial value
+        res += "Name: " + str(self.name) + "\n"
+        res += "Description: " + str(self.description) + "\n"
+        res += "Gold Cost: " + str(self.gold_cost) + "\n"
+        res += "Sell Gold Gain: " + str(self.sell_gold_gain) + "\n"
+        res += "Gem Cost: " + str(self.gem_cost) + "\n"
+        res += "Sell Gem Gain: " + str(self.sell_gem_gain) + "\n"
+        return res
 
     def clone(self):
         # type: () -> Item
@@ -1467,12 +1417,6 @@ class Rune(Item):
         self.level: int = 1
         self.level_up_gold_cost: mpf = gold_cost
         self.level_up_success_rate: mpf = mpf("1")
-
-    def __str__(self):
-        return '%s(%s)' % (
-            type(self).__name__,
-            ', '.join('%s=%s' % item for item in vars(self).items())
-        )
 
     def get_sub_stats(self):
         # type: () -> list
@@ -1655,12 +1599,6 @@ class SetEffect:
         self.crit_resist_up: mpf = crit_resist_up
         self.stun_rate_up: mpf = stun_rate_up
 
-    def __str__(self):
-        return '%s(%s)' % (
-            type(self).__name__,
-            ', '.join('%s=%s' % item for item in vars(self).items())
-        )
-
     def clone(self):
         # type: () -> SetEffect
         return copy.deepcopy(self)
@@ -1691,10 +1629,22 @@ class StatIncrease:
         self.accuracy_up: mpf = accuracy_up
 
     def __str__(self):
-        return '%s(%s)' % (
-            type(self).__name__,
-            ', '.join('%s=%s' % item for item in vars(self).items())
-        )
+        # type: () -> str
+        res: str = ""  # initial value
+        res += "Max HP Up: " + str(self.max_hp_up) + "\n"
+        res += "Max HP Percentage Up: " + str(self.max_hp_percentage_up * 100) + "%\n"
+        res += "Max Magic Points Up: " + str(self.max_magic_points_up) + "\n"
+        res += "Max Magic Points Percentage Up: " + str(self.max_magic_points_percentage_up * 100) + "%\n"
+        res += "Attack Up: " + str(self.attack_up) + "\n"
+        res += "Attack Percentage Up: " + str(self.attack_percentage_up * 100) + "%\n"
+        res += "Defense Up: " + str(self.defense_up) + "\n"
+        res += "Defense Percentage Up: " + str(self.defense_percentage_up * 100) + "%\n"
+        res += "Attack Speed Up: " + str(self.attack_speed_up) + "\n"
+        res += "Crit Rate Up: " + str(self.crit_rate_up * 100) + "%\n"
+        res += "Crit Damage Up: " + str(self.crit_damage_up * 100) + "%\n"
+        res += "Resistance Up: " + str(self.resistance_up * 100) + "%\n"
+        res += "Accuracy Up: " + str(self.accuracy_up * 100) + "%\n"
+        return res
 
     def clone(self):
         # type: () -> StatIncrease
@@ -1712,12 +1662,6 @@ class AwakenShard(Item):
                       gem_cost)
         self.legendary_creature_name: str = legendary_creature_name
 
-    def __str__(self):
-        return '%s(%s)' % (
-            type(self).__name__,
-            ', '.join('%s=%s' % item for item in vars(self).items())
-        )
-
 
 class EXPShard(Item):
     """
@@ -1730,12 +1674,6 @@ class EXPShard(Item):
                       gold_cost, gem_cost)
         self.exp_granted: mpf = exp_granted
 
-    def __str__(self):
-        return '%s(%s)' % (
-            type(self).__name__,
-            ', '.join('%s=%s' % item for item in vars(self).items())
-        )
-
 
 class LevelUpShard(Item):
     """
@@ -1747,12 +1685,6 @@ class LevelUpShard(Item):
         Item.__init__(self, "LEVEL UP SHARD", "A shard used to immediately increase the level of a legendary creature.",
                       gold_cost, gem_cost)
 
-    def __str__(self):
-        return '%s(%s)' % (
-            type(self).__name__,
-            ', '.join('%s=%s' % item for item in vars(self).items())
-        )
-
 
 class SkillLevelUpShard(Item):
     """
@@ -1763,12 +1695,6 @@ class SkillLevelUpShard(Item):
         # type: (mpf, mpf) -> None
         Item.__init__(self, "SKILL LEVEL UP SHARD", "A shard used to immediately increase the level of a "
                                                     "legendary creature' s skill.", gold_cost, gem_cost)
-
-    def __str__(self):
-        return '%s(%s)' % (
-            type(self).__name__,
-            ', '.join('%s=%s' % item for item in vars(self).items())
-        )
 
 
 class Scroll(Item):
@@ -1784,12 +1710,6 @@ class Scroll(Item):
                                                                                       " SCROLL"
         Item.__init__(self, scroll_name, description, gold_cost, gem_cost)
         self.__potential_legendary_creatures: list = potential_legendary_creatures
-
-    def __str__(self):
-        return '%s(%s)' % (
-            type(self).__name__,
-            ', '.join('%s=%s' % item for item in vars(self).items())
-        )
 
     def get_potential_legendary_creatures(self):
         # type: () -> list
@@ -1813,13 +1733,11 @@ class Team:
             self.__legendary_creatures[0]
 
     def __str__(self):
-        res: str = "Team(leader=" + str(self.leader.name) + ", legendary_creatures=["
-        for i in range(len(self.__legendary_creatures)):
-            curr_legendary_creature: LegendaryCreature = self.__legendary_creatures[i]
-            if i < len(self.__legendary_creatures) - 1:
-                res += str(curr_legendary_creature) + ", "
-            else:
-                res += str(curr_legendary_creature) + "])"
+        # type: () -> str
+        res: str = "Leader: "  # initial value
+        res += "None\n" if self.leader is None else str(self.leader.name) + "\n"
+        for legendary_creature in self.__legendary_creatures:
+            res += str(legendary_creature) + "\n"
 
         return res
 
@@ -1952,14 +1870,7 @@ class LegendaryCreature:
         self.can_use_passive_skills: bool = True
         self.passive_skills_activated: bool = False
         self.leader_skills_activated: bool = False
-        self.placed_in_training_area: bool = False
         self.corresponding_team: Team = Team()
-
-    def __str__(self):
-        return '%s(%s)' % (
-            type(self).__name__,
-            ', '.join('%s=%s' % item for item in vars(self).items())
-        )
 
     def awaken(self):
         # type: () -> bool
@@ -2298,6 +2209,9 @@ class LegendaryCreature:
         self.defense += rune.stat_increase.defense_up
         self.attack_speed += rune.stat_increase.attack_speed_up
         self.crit_rate += rune.stat_increase.crit_rate_up
+        if self.crit_rate >= self.MAX_CRIT_RATE:
+            self.crit_rate = self.MAX_CRIT_RATE
+
         self.crit_damage += rune.stat_increase.crit_damage_up
         self.resistance += rune.stat_increase.resistance_up
         if self.resistance >= self.MAX_RESISTANCE:
@@ -2316,6 +2230,9 @@ class LegendaryCreature:
             self.defense *= 1 + (rune.set_effect.defense_percentage_up / 100)
             self.attack_speed *= 1 + (rune.set_effect.attack_speed_percentage_up / 100)
             self.crit_rate += rune.set_effect.crit_rate_up
+            if self.crit_rate >= self.MAX_CRIT_RATE:
+                self.crit_rate = self.MAX_CRIT_RATE
+
             self.crit_damage += rune.set_effect.crit_damage_up
             self.resistance += rune.set_effect.resistance_up
             if self.resistance >= self.MAX_RESISTANCE:
@@ -2549,12 +2466,6 @@ class FusionLegendaryCreature(LegendaryCreature):
                                    attack_power, defense, attack_speed, skills, awaken_bonus)
         self.__material_legendary_creatures: list = material_legendary_creatures
 
-    def __str__(self):
-        return '%s(%s)' % (
-            type(self).__name__,
-            ', '.join('%s=%s' % item for item in vars(self).items())
-        )
-
     def get_material_legendary_creatures(self):
         # type: () -> list
         return self.__material_legendary_creatures
@@ -2574,10 +2485,14 @@ class Skill:
         self.is_active: bool = True
 
     def __str__(self):
-        return '%s(%s)' % (
-            type(self).__name__,
-            ', '.join('%s=%s' % item for item in vars(self).items())
-        )
+        # type: () -> str
+        res: str = ""  # initial value
+        res += "Name: " + str(self.name) + "\n"
+        res += "Description: " + str(self.description) + "\n"
+        res += "Magic Points Cost: " + str(self.magic_points_cost) + "\n"
+        res += "Level: " + str(self.level) + "\n"
+        res += "Is this skill active? " + str(self.is_active) + "\n"
+        return res
 
     def level_up(self):
         # type: () -> None
@@ -2626,12 +2541,6 @@ class ActiveSkill(Skill):
         self.does_ignore_shield: bool = does_ignore_shield
         self.does_ignore_invincibility: bool = does_ignore_invincibility
 
-    def __str__(self):
-        return '%s(%s)' % (
-            type(self).__name__,
-            ', '.join('%s=%s' % item for item in vars(self).items())
-        )
-
     def get_beneficial_effects_to_allies(self):
         # type: () -> list
         return self.__beneficial_effects_to_allies
@@ -2668,12 +2577,6 @@ class PassiveSkill(Skill):
         Skill.__init__(self, name, description, mpf("0"))
         self.passive_skill_effect: PassiveSkillEffect = passive_skill_effect
 
-    def __str__(self):
-        return '%s(%s)' % (
-            type(self).__name__,
-            ', '.join('%s=%s' % item for item in vars(self).items())
-        )
-
 
 class PassiveSkillEffect:
     """
@@ -2703,12 +2606,6 @@ class PassiveSkillEffect:
         self.enemies_attack_gauge_down: mpf = enemies_attack_gauge_down
         self.heal_amount_to_allies: mpf = heal_amount_to_allies
 
-    def __str__(self):
-        return '%s(%s)' % (
-            type(self).__name__,
-            ', '.join('%s=%s' % item for item in vars(self).items())
-        )
-
     def get_beneficial_effects_to_allies(self):
         # type: () -> list
         return self.__beneficial_effects_to_allies
@@ -2732,12 +2629,6 @@ class LeaderSkill(Skill):
         Skill.__init__(self, name, description, magic_points_cost)
         self.leader_skill_effect: LeaderSkillEffect = leader_skill_effect
 
-    def __str__(self):
-        return '%s(%s)' % (
-            type(self).__name__,
-            ', '.join('%s=%s' % item for item in vars(self).items())
-        )
-
 
 class LeaderSkillEffect:
     """
@@ -2758,12 +2649,6 @@ class LeaderSkillEffect:
         self.crit_damage_up: mpf = crit_damage_up
         self.resistance_up: mpf = resistance_up
         self.accuracy_up: mpf = accuracy_up
-
-    def __str__(self):
-        return '%s(%s)' % (
-            type(self).__name__,
-            ', '.join('%s=%s' % item for item in vars(self).items())
-        )
 
     def clone(self):
         # type: () -> LeaderSkillEffect
@@ -2796,12 +2681,6 @@ class DamageMultiplier:
         self.multiplier_to_self_current_hp_percentage: mpf = multiplier_to_self_current_hp_percentage
         self.multiplier_to_self_hp_percentage_loss: mpf = multiplier_to_self_hp_percentage_loss
         self.multiplier_to_enemy_current_hp_percentage: mpf = multiplier_to_enemy_current_hp_percentage
-
-    def __str__(self):
-        return '%s(%s)' % (
-            type(self).__name__,
-            ', '.join('%s=%s' % item for item in vars(self).items())
-        )
 
     def calculate_raw_damage_without_enemy_defense_invincibility_shield(self, user, target):
         # type: (LegendaryCreature, LegendaryCreature) -> mpf
@@ -2860,13 +2739,35 @@ class DamageMultiplier:
 
         # Checking for critical hits
         crit_chance: mpf = user.crit_rate + user.crit_rate_up - target.crit_resist - target.crit_resist_up
-        if crit_chance < LegendaryCreature.MIN_CRIT_RATE:
+        if crit_chance > LegendaryCreature.MAX_CRIT_RATE:
+            crit_chance = LegendaryCreature.MAX_CRIT_RATE
+        elif crit_chance < LegendaryCreature.MIN_CRIT_RATE:
             crit_chance = LegendaryCreature.MIN_CRIT_RATE
 
         is_crit: bool = random.random() < crit_chance
         return raw_damage * damage_reduction_factor if not is_crit else raw_damage * (user.crit_damage +
                                                                                       user.crit_damage_up) * \
                                                                         damage_reduction_factor
+
+    def __str__(self):
+        # type: () -> str
+        res: str = ""  # initial value
+        res += "Damage Multiplier to Self Max HP: " + str(self.multiplier_to_self_max_hp) + "\n"
+        res += "Damage Multiplier to Enemy's Max HP: " + str(self.multiplier_to_enemy_max_hp) + "\n"
+        res += "Damage Multiplier to Self Attack Power: " + str(self.multiplier_to_self_attack_power) + "\n"
+        res += "Damage Multiplier to Enemy's Attack Power: " + str(self.multiplier_to_enemy_attack_power) + "\n"
+        res += "Damage Multiplier to Self Defense: " + str(self.multiplier_to_self_defense) + "\n"
+        res += "Damage Multiplier to Enemy's Defense: " + str(self.multiplier_to_enemy_defense) + "\n"
+        res += "Damage Multiplier to Self Max Magic Points: " + str(self.multiplier_to_self_max_magic_points) + "\n"
+        res += "Damage Multiplier to Enemy's Max Magic Points: " + str(self.multiplier_to_enemy_max_magic_points) + "\n"
+        res += "Damage Multiplier to Self Attack Speed: " + str(self.multiplier_to_self_attack_speed) + "\n"
+        res += "Damage Multiplier to Enemy's Attack Speed: " + str(self.multiplier_to_enemy_attack_speed) + "\n"
+        res += "Damage Multiplier to Self Current HP Percentage: " + \
+               str(self.multiplier_to_self_current_hp_percentage) + "\n"
+        res += "Damage Multiplier to Self HP Percentage Loss: " + str(self.multiplier_to_self_hp_percentage_loss) + "\n"
+        res += "Damage Multiplier to Enemy Current HP Percentage: " + \
+               str(self.multiplier_to_enemy_current_hp_percentage) + "\n"
+        return res
 
     def clone(self):
         # type: () -> DamageMultiplier
@@ -2901,12 +2802,6 @@ class BeneficialEffect:
         self.shield_percentage_up: mpf = mpf("15") if self.name == "SHIELD" else mpf("0")
         self.can_be_stacked: bool = self.name == "HEAL_OVER_TIME"
 
-    def __str__(self):
-        return '%s(%s)' % (
-            type(self).__name__,
-            ', '.join('%s=%s' % item for item in vars(self).items())
-        )
-
     def clone(self):
         # type: () -> BeneficialEffect
         return copy.deepcopy(self)
@@ -2937,12 +2832,6 @@ class HarmfulEffect:
         self.prevents_moves: bool = self.name == "STUN"
         self.can_be_stacked: bool = self.name == "DAMAGE_OVER_TIME"
 
-    def __str__(self):
-        return '%s(%s)' % (
-            type(self).__name__,
-            ', '.join('%s=%s' % item for item in vars(self).items())
-        )
-
     def clone(self):
         # type: () -> HarmfulEffect
         return copy.deepcopy(self)
@@ -2957,12 +2846,6 @@ class PlayerBase:
         # type: () -> None
         self.__islands: list = []  # initial value
         self.island_build_gold_cost: mpf = mpf("1e8")
-
-    def __str__(self):
-        return '%s(%s)' % (
-            type(self).__name__,
-            ', '.join('%s=%s' % item for item in vars(self).items())
-        )
 
     def add_island(self):
         # type: () -> None
@@ -3030,8 +2913,8 @@ class IslandTile:
     def __str__(self):
         # type: () -> str
         if isinstance(self.building, Building):
-            return "IslandTile(" + str(self.building.name) + ")"
-        return "IslandTile(GRASS)"
+            return str(self.building.name)
+        return "GRASS"
 
     def add_building(self, building):
         # type: (Building) -> bool
@@ -3066,12 +2949,6 @@ class Building:
         self.upgrade_gem_cost: mpf = gem_cost
         self.level: int = 1
 
-    def __str__(self):
-        return '%s(%s)' % (
-            type(self).__name__,
-            ', '.join('%s=%s' % item for item in vars(self).items())
-        )
-
     def level_up(self):
         # type: () -> None
         pass
@@ -3094,12 +2971,6 @@ class TrainingArea(Building):
                           gold_cost, gem_cost)
         self.legendary_creature_exp_per_second: mpf = self.gold_cost / mpf("1e5")
         self.__legendary_creatures_placed: list = []  # initial value
-
-    def __str__(self):
-        return '%s(%s)' % (
-            type(self).__name__,
-            ', '.join('%s=%s' % item for item in vars(self).items())
-        )
 
     def level_up(self):
         # type: () -> None
@@ -3136,12 +3007,6 @@ class Tree(Building):
         # type: (mpf, mpf) -> None
         Building.__init__(self, "TREE", "A tree.", gold_cost, gem_cost)
 
-    def __str__(self):
-        return '%s(%s)' % (
-            type(self).__name__,
-            ', '.join('%s=%s' % item for item in vars(self).items())
-        )
-
 
 class Guardstone(Building):
     """
@@ -3153,12 +3018,6 @@ class Guardstone(Building):
         Building.__init__(self, "GUARDSTONE", "A building used to increase the defense of all legendary creatures.",
                           gold_cost, gem_cost)
         self.legendary_creature_defense_percentage_up: mpf = mpf("3")
-
-    def __str__(self):
-        return '%s(%s)' % (
-            type(self).__name__,
-            ', '.join('%s=%s' % item for item in vars(self).items())
-        )
 
     def level_up(self):
         # type: () -> None
@@ -3180,12 +3039,6 @@ class LegendaryCreatureSanctuary(Building):
                           gold_cost, gem_cost)
         self.legendary_creature_attack_power_percentage_up: mpf = mpf("3")
 
-    def __str__(self):
-        return '%s(%s)' % (
-            type(self).__name__,
-            ', '.join('%s=%s' % item for item in vars(self).items())
-        )
-
     def level_up(self):
         # type: () -> None
         self.level += 1
@@ -3204,12 +3057,6 @@ class SurvivalAltar(Building):
         Building.__init__(self, "SURVIVAL ALTAR", "A building used to increase the maximum HP of all legendary "
                                                   "creatures.", gold_cost, gem_cost)
         self.legendary_creature_max_hp_percentage_up: mpf = mpf("3")
-
-    def __str__(self):
-        return '%s(%s)' % (
-            type(self).__name__,
-            ', '.join('%s=%s' % item for item in vars(self).items())
-        )
 
     def level_up(self):
         # type: () -> None
@@ -3230,12 +3077,6 @@ class MagicAltar(Building):
                                                "legendary creatures.", gold_cost, gem_cost)
         self.legendary_creature_max_magic_points_percentage_up: mpf = mpf("3")
 
-    def __str__(self):
-        return '%s(%s)' % (
-            type(self).__name__,
-            ', '.join('%s=%s' % item for item in vars(self).items())
-        )
-
     def level_up(self):
         # type: () -> None
         self.level += 1
@@ -3255,12 +3096,6 @@ class BoosterTower(Building):
                                                  "creatures.", gold_cost, gem_cost)
         self.legendary_creature_attack_speed_percentage_up: mpf = mpf("3")
 
-    def __str__(self):
-        return '%s(%s)' % (
-            type(self).__name__,
-            ', '.join('%s=%s' % item for item in vars(self).items())
-        )
-
     def level_up(self):
         # type: () -> None
         self.level += 1
@@ -3278,12 +3113,6 @@ class PlayerEXPTower(Building):
         # type: (mpf, mpf) -> None
         Building.__init__(self, "PLAYER EXP TOWER", "A tower producing EXP for the player.", gold_cost, gem_cost)
         self.exp_per_second: mpf = self.gold_cost / mpf("1e5")
-
-    def __str__(self):
-        return '%s(%s)' % (
-            type(self).__name__,
-            ', '.join('%s=%s' % item for item in vars(self).items())
-        )
 
     def level_up(self):
         # type: () -> None
@@ -3303,12 +3132,6 @@ class GoldMine(Building):
         Building.__init__(self, "GOLD MINE", "A mine producing gold.", gold_cost, gem_cost)
         self.gold_per_second: mpf = self.gold_cost / mpf("1e5")
 
-    def __str__(self):
-        return '%s(%s)' % (
-            type(self).__name__,
-            ', '.join('%s=%s' % item for item in vars(self).items())
-        )
-
     def level_up(self):
         # type: () -> None
         self.level += 1
@@ -3326,12 +3149,6 @@ class GemMine(Building):
         # type: (mpf, mpf) -> None
         Building.__init__(self, "GEM MINE", "A mine producing gems.", gold_cost, gem_cost)
         self.gem_per_second: mpf = self.gold_cost / mpf("1e7")
-
-    def __str__(self):
-        return '%s(%s)' % (
-            type(self).__name__,
-            ', '.join('%s=%s' % item for item in vars(self).items())
-        )
 
     def level_up(self):
         # type: () -> None
@@ -3355,12 +3172,6 @@ class PowerUpCircle(Building):
         self.legendary_creature_to_power_up: LegendaryCreature or None = None
         self.__material_legendary_creatures: list = []  # initial value
 
-    def __str__(self):
-        return '%s(%s)' % (
-            type(self).__name__,
-            ', '.join('%s=%s' % item for item in vars(self).items())
-        )
-
     def execute_power_up(self):
         # type: () -> LegendaryCreature or None
         if isinstance(self.legendary_creature_to_power_up, LegendaryCreature):
@@ -3378,13 +3189,7 @@ class PowerUpCircle(Building):
         # type: () -> LegendaryCreature or None
         if isinstance(self.legendary_creature_to_power_up, LegendaryCreature):
             curr_legendary_creature: LegendaryCreature = self.legendary_creature_to_power_up
-
-            # Evolve the legendary creature if there are sufficient material legendary creatures of the
-            # same or higher rating as the legendary creature to be evolved
-            num_materials: int = sum(1 for legendary_creature in self.__material_legendary_creatures if
-                                     legendary_creature.rating >= curr_legendary_creature.rating)
-            if len(self.__material_legendary_creatures) == curr_legendary_creature.rating - 1 and \
-                    num_materials == curr_legendary_creature.rating - 1:
+            if len(self.__material_legendary_creatures) == curr_legendary_creature.rating - 1:
                 curr_legendary_creature.evolve()
 
             self.deselect_legendary_creature_to_power_up()
@@ -3438,12 +3243,6 @@ class Summonhenge(Building):
         # type: (mpf, mpf) -> None
         Building.__init__(self, "SUMMONHENGE", "A building used to summon legendary creatures.", gold_cost, gem_cost)
 
-    def __str__(self):
-        return '%s(%s)' % (
-            type(self).__name__,
-            ', '.join('%s=%s' % item for item in vars(self).items())
-        )
-
 
 class FusionCenter(Building):
     """
@@ -3455,12 +3254,6 @@ class FusionCenter(Building):
         Building.__init__(self, "FUSION CENTER", "A building used to fuse legendary creatures into a stronger one.",
                           gold_cost, gem_cost)
         self.__fusion_legendary_creatures: list = fusion_legendary_creatures
-
-    def __str__(self):
-        return '%s(%s)' % (
-            type(self).__name__,
-            ', '.join('%s=%s' % item for item in vars(self).items())
-        )
 
     def get_fusion_legendary_creatures(self):
         # type: () -> list
@@ -3478,12 +3271,6 @@ class Obstacle(Building):
         self.remove_gold_gain: mpf = mpf("10") ** random.randint(5, 10)
         self.remove_gem_gain: mpf = mpf("10") ** random.randint(2, 6)
 
-    def __str__(self):
-        return '%s(%s)' % (
-            type(self).__name__,
-            ', '.join('%s=%s' % item for item in vars(self).items())
-        )
-
 
 class TempleOfWishes(Building):
     """
@@ -3497,12 +3284,6 @@ class TempleOfWishes(Building):
         self.__obtainable_objects: list = obtainable_objects
         self.wishes_left: int = 3  # The number of wishes a player can make in a day.
         self.already_reset: bool = False
-
-    def __str__(self):
-        return '%s(%s)' % (
-            type(self).__name__,
-            ', '.join('%s=%s' % item for item in vars(self).items())
-        )
 
     def reset_wishes_left(self):
         # type: () -> bool
@@ -3532,12 +3313,6 @@ class ItemShop:
         self.name: str = "ITEM SHOP"
         self.__items_sold: list = items_sold
 
-    def __str__(self):
-        return '%s(%s)' % (
-            type(self).__name__,
-            ', '.join('%s=%s' % item for item in vars(self).items())
-        )
-
     def get_items_sold(self):
         # type: () -> list
         return self.__items_sold
@@ -3557,12 +3332,6 @@ class BuildingShop:
         self.name: str = "BUILDING SHOP"
         self.__buildings_sold: list = buildings_sold
 
-    def __str__(self):
-        return '%s(%s)' % (
-            type(self).__name__,
-            ', '.join('%s=%s' % item for item in vars(self).items())
-        )
-
     def get_buildings_sold(self):
         # type: () -> list
         return self.__buildings_sold
@@ -3577,8 +3346,8 @@ class Reward:
     This class contains attributes of the reward gained for doing something in this game.
     """
 
-    def __init__(self, player_reward_exp=mpf("0"), player_reward_gold=mpf("0"), player_reward_gems=mpf("0"),
-                 legendary_creature_reward_exp=mpf("0"), player_reward_items=None):
+    def __init__(self, player_reward_exp, player_reward_gold, player_reward_gems, legendary_creature_reward_exp,
+                 player_reward_items=None):
         # type: (mpf, mpf, mpf, mpf, list) -> None
         if player_reward_items is None:
             player_reward_items = []
@@ -3588,12 +3357,6 @@ class Reward:
         self.player_reward_gems: mpf = player_reward_gems
         self.legendary_creature_reward_exp: mpf = legendary_creature_reward_exp
         self.__player_reward_items: list = player_reward_items
-
-    def __str__(self):
-        return '%s(%s)' % (
-            type(self).__name__,
-            ', '.join('%s=%s' % item for item in vars(self).items())
-        )
 
     def get_player_reward_items(self):
         # type: () -> list
@@ -3609,22 +3372,15 @@ class Game:
     This class contains attributes of the saved game data.
     """
 
-    def __init__(self, player_data, potential_legendary_creatures, fusion_legendary_creatures, item_shop, building_shop,
-                 battle_arena, battle_areas):
-        # type: (Player, list, list, ItemShop, BuildingShop, Arena, list) -> None
+    def __init__(self, player_data, potential_legendary_creatures, fusion_legendary_creatures, item_shop, battle_arena,
+                 battle_areas):
+        # type: (Player, list, list, ItemShop, Arena, list) -> None
         self.player_data: Player = player_data
         self.__potential_legendary_creatures: list = potential_legendary_creatures
         self.__fusion_legendary_creatures: list = fusion_legendary_creatures
         self.item_shop: ItemShop = item_shop
-        self.building_shop: BuildingShop = building_shop
         self.battle_arena: Arena = battle_arena
         self.__battle_areas: list = battle_areas
-
-    def __str__(self):
-        return '%s(%s)' % (
-            type(self).__name__,
-            ', '.join('%s=%s' % item for item in vars(self).items())
-        )
 
     def get_potential_legendary_creatures(self):
         # type: () -> list
@@ -3684,7 +3440,7 @@ def main():
                     mpf("0"), mpf("0"), mpf("2e36"), False, False, False),
         PassiveSkill("EXTRA TURN PASSIVE SKILL", "Increase player's extra turn change by 15%.",
                      PassiveSkillEffect(extra_turn_chance_up=mpf("0.15"))),
-        LeaderSkill("ATTACK LEADER SKILL", "Increase all allies' attack power by 20%.", mpf("0"),
+        LeaderSkill("ATTACK LEADER SKILL", "Increase all allies' attack power by 20%.",
                     LeaderSkillEffect(attack_power_percentage_up=mpf("20")))
     ]
 
@@ -3745,8 +3501,7 @@ def main():
                                                                            [],
                                                                            mpf("0"), mpf("0"), mpf("0"), False, False,
                                                                            False))),
-        LegendaryCreature("Avaffaip", "NEUTRAL", 1, "NORMAL", mpf("5.19e4"), mpf("5.07e4"), mpf("8.57e3"),
-                          mpf("8.66e3"),
+        LegendaryCreature("Avaffaip", "NEUTRAL", 1, "NORMAL", mpf("5.19e4"), mpf("5.07e4"), mpf("8.57e3"), mpf("8.66e3"),
                           mpf("112"), skills_list, AwakenBonus(mpf("125"), mpf("125"), mpf("125"), mpf("125"),
                                                                mpf("0"), mpf("0"), mpf("0"), mpf("0.15"), mpf("0"),
                                                                ActiveSkill("SINGLE-TARGET ATTACK SKILL #4",
@@ -3761,22 +3516,18 @@ def main():
 
     # Initialising legendary creatures which can be obtained from fusions.
     fusion_legendary_creatures: list = [
-        FusionLegendaryCreature("Meppee", "LIGHT", 1, "NORMAL", mpf("2.5e5"), mpf("2.47e5"), mpf("4.43e4"),
-                                mpf("4.35e4"),
+        FusionLegendaryCreature("Meppee", "LIGHT", 1, "NORMAL", mpf("2.5e5"), mpf("2.47e5"), mpf("4.43e4"), mpf("4.35e4"),
                                 mpf("109"), skills_list, AwakenBonus(mpf("125"), mpf("125"), mpf("125"), mpf("125"),
-                                                                     mpf("0"), mpf("0"), mpf("0.5"), mpf("0"), mpf("0"),
-                                                                     ActiveSkill("SINGLE-TARGET ATTACK SKILL #4",
-                                                                                 "Extreme Single-Target Attack Skill",
-                                                                                 "ATTACK", False,
-                                                                                 mpf("1e90"), 8, DamageMultiplier(
-                                                                             multiplier_to_self_attack_power=mpf(
-                                                                                 "94.5")), [],
-                                                                                 [],
-                                                                                 mpf("0"), mpf("0"), mpf("0"), False,
-                                                                                 False,
-                                                                                 False)),
-                                [potential_legendary_creatures[x] for x in
-                                 range(1, len(potential_legendary_creatures))])
+                                                               mpf("0"), mpf("0"), mpf("0.5"), mpf("0"), mpf("0"),
+                                                               ActiveSkill("SINGLE-TARGET ATTACK SKILL #4",
+                                                                           "Extreme Single-Target Attack Skill",
+                                                                           "ATTACK", False,
+                                                                           mpf("1e90"), 8, DamageMultiplier(
+                                                                       multiplier_to_self_attack_power=mpf("94.5")), [],
+                                                                           [],
+                                                                           mpf("0"), mpf("0"), mpf("0"), False, False,
+                                                                           False)),
+                                [potential_legendary_creatures[x] for x in range(1, len(potential_legendary_creatures))])
     ]
 
     # Initialising the item shop
@@ -3879,129 +3630,6 @@ def main():
                potential_legendary_creatures)
     ])
 
-    # Initialising the building shop
-    building_shop: BuildingShop = BuildingShop([
-        TrainingArea(mpf("1e8"), mpf("1000")),
-        Tree(mpf("1e4"), mpf("0")),
-        Guardstone(mpf("1e7"), mpf("100")),
-        LegendaryCreatureSanctuary(mpf("1e7"), mpf("100")),
-        SurvivalAltar(mpf("1e7"), mpf("100")),
-        MagicAltar(mpf("1e7"), mpf("100")),
-        BoosterTower(mpf("1e7"), mpf("100")),
-        PlayerEXPTower(mpf("1e7"), mpf("100")),
-        GoldMine(mpf("1e6"), mpf("10")),
-        GemMine(mpf("1e6"), mpf("10")),
-        PowerUpCircle(mpf("1e5"), mpf("1")),
-        Summonhenge(mpf("1e5"), mpf("1")),
-        FusionCenter(mpf("1e8"), mpf("1000"), fusion_legendary_creatures),
-        TempleOfWishes(mpf("1e5"), mpf("1"), [
-            Reward(player_reward_exp=mpf("1e6")),
-            Reward(player_reward_exp=mpf("5e6")),
-            Reward(player_reward_gold=mpf("1e5")),
-            Reward(player_reward_gold=mpf("5e5")),
-            Reward(player_reward_gems=mpf("10")),
-            Reward(player_reward_gems=mpf("50")),
-            Reward(legendary_creature_reward_exp=mpf("1e6")),
-            Reward(legendary_creature_reward_exp=mpf("5e6")),
-            Rune("1-STAR ENERGY RUNE - SLOT 1", "An Energy rune of rating 1 at slot 1", mpf("1e6"), mpf("0"), 1, 1,
-                 "ENERGY", "ATK"),
-            Rune("1-STAR ENERGY RUNE - SLOT 2", "An Energy rune of rating 1 at slot 2", mpf("1e6"), mpf("0"), 1, 2,
-                 "ENERGY", "HP"),
-            Rune("1-STAR ENERGY RUNE - SLOT 2", "An Energy rune of rating 1 at slot 2", mpf("1e6"), mpf("0"), 1, 2,
-                 "ENERGY", "HP%"),
-            Rune("1-STAR ENERGY RUNE - SLOT 2", "An Energy rune of rating 1 at slot 2", mpf("1e6"), mpf("0"), 1, 2,
-                 "ENERGY", "MP"),
-            Rune("1-STAR ENERGY RUNE - SLOT 2", "An Energy rune of rating 1 at slot 2", mpf("1e6"), mpf("0"), 1, 2,
-                 "ENERGY", "MP%"),
-            Rune("1-STAR ENERGY RUNE - SLOT 2", "An Energy rune of rating 1 at slot 2", mpf("1e6"), mpf("0"), 1, 2,
-                 "ENERGY", "ATK"),
-            Rune("1-STAR ENERGY RUNE - SLOT 2", "An Energy rune of rating 1 at slot 2", mpf("1e6"), mpf("0"), 1, 2,
-                 "ENERGY", "ATK%"),
-            Rune("1-STAR ENERGY RUNE - SLOT 2", "An Energy rune of rating 1 at slot 2", mpf("1e6"), mpf("0"), 1, 2,
-                 "ENERGY", "DEF"),
-            Rune("1-STAR ENERGY RUNE - SLOT 2", "An Energy rune of rating 1 at slot 2", mpf("1e6"), mpf("0"), 1, 2,
-                 "ENERGY", "DEF%"),
-            Rune("1-STAR ENERGY RUNE - SLOT 2", "An Energy rune of rating 1 at slot 2", mpf("1e6"), mpf("0"), 1, 2,
-                 "ENERGY", "SPD"),
-            Rune("1-STAR ENERGY RUNE - SLOT 2", "An Energy rune of rating 1 at slot 2", mpf("1e6"), mpf("0"), 1, 2,
-                 "ENERGY", "CR"),
-            Rune("1-STAR ENERGY RUNE - SLOT 2", "An Energy rune of rating 1 at slot 2", mpf("1e6"), mpf("0"), 1, 2,
-                 "ENERGY", "CD"),
-            Rune("1-STAR ENERGY RUNE - SLOT 2", "An Energy rune of rating 1 at slot 2", mpf("1e6"), mpf("0"), 1, 2,
-                 "ENERGY", "RES"),
-            Rune("1-STAR ENERGY RUNE - SLOT 2", "An Energy rune of rating 1 at slot 2", mpf("1e6"), mpf("0"), 1, 2,
-                 "ENERGY", "ACC"),
-            Rune("1-STAR ENERGY RUNE - SLOT 3", "An Energy rune of rating 1 at slot 3", mpf("1e6"), mpf("0"), 1, 3,
-                 "ENERGY", "DEF"),
-            Rune("1-STAR ENERGY RUNE - SLOT 4", "An Energy rune of rating 1 at slot 4", mpf("1e6"), mpf("0"), 1, 4,
-                 "ENERGY", "HP"),
-            Rune("1-STAR ENERGY RUNE - SLOT 4", "An Energy rune of rating 1 at slot 4", mpf("1e6"), mpf("0"), 1, 4,
-                 "ENERGY", "HP%"),
-            Rune("1-STAR ENERGY RUNE - SLOT 4", "An Energy rune of rating 1 at slot 4", mpf("1e6"), mpf("0"), 1, 4,
-                 "ENERGY", "MP"),
-            Rune("1-STAR ENERGY RUNE - SLOT 4", "An Energy rune of rating 1 at slot 4", mpf("1e6"), mpf("0"), 1, 4,
-                 "ENERGY", "MP%"),
-            Rune("1-STAR ENERGY RUNE - SLOT 4", "An Energy rune of rating 1 at slot 4", mpf("1e6"), mpf("0"), 1, 4,
-                 "ENERGY", "ATK"),
-            Rune("1-STAR ENERGY RUNE - SLOT 4", "An Energy rune of rating 1 at slot 4", mpf("1e6"), mpf("0"), 1, 4,
-                 "ENERGY", "ATK%"),
-            Rune("1-STAR ENERGY RUNE - SLOT 4", "An Energy rune of rating 1 at slot 4", mpf("1e6"), mpf("0"), 1, 4,
-                 "ENERGY", "DEF"),
-            Rune("1-STAR ENERGY RUNE - SLOT 4", "An Energy rune of rating 1 at slot 4", mpf("1e6"), mpf("0"), 1, 4,
-                 "ENERGY", "DEF%"),
-            Rune("1-STAR ENERGY RUNE - SLOT 4", "An Energy rune of rating 1 at slot 4", mpf("1e6"), mpf("0"), 1, 4,
-                 "ENERGY", "SPD"),
-            Rune("1-STAR ENERGY RUNE - SLOT 4", "An Energy rune of rating 1 at slot 4", mpf("1e6"), mpf("0"), 1, 4,
-                 "ENERGY", "CR"),
-            Rune("1-STAR ENERGY RUNE - SLOT 4", "An Energy rune of rating 1 at slot 4", mpf("1e6"), mpf("0"), 1, 4,
-                 "ENERGY", "CD"),
-            Rune("1-STAR ENERGY RUNE - SLOT 4", "An Energy rune of rating 1 at slot 4", mpf("1e6"), mpf("0"), 1, 4,
-                 "ENERGY", "RES"),
-            Rune("1-STAR ENERGY RUNE - SLOT 4", "An Energy rune of rating 1 at slot 4", mpf("1e6"), mpf("0"), 1, 4,
-                 "ENERGY", "ACC"),
-            Rune("1-STAR ENERGY RUNE - SLOT 5", "An Energy rune of rating 1 at slot 5", mpf("1e6"), mpf("0"), 1, 5,
-                 "ENERGY", "HP"),
-            Rune("1-STAR ENERGY RUNE - SLOT 6", "An Energy rune of rating 1 at slot 6", mpf("1e6"), mpf("0"), 1, 6,
-                 "ENERGY", "HP"),
-            Rune("1-STAR ENERGY RUNE - SLOT 6", "An Energy rune of rating 1 at slot 6", mpf("1e6"), mpf("0"), 1, 6,
-                 "ENERGY", "HP%"),
-            Rune("1-STAR ENERGY RUNE - SLOT 6", "An Energy rune of rating 1 at slot 6", mpf("1e6"), mpf("0"), 1, 6,
-                 "ENERGY", "MP"),
-            Rune("1-STAR ENERGY RUNE - SLOT 6", "An Energy rune of rating 1 at slot 6", mpf("1e6"), mpf("0"), 1, 6,
-                 "ENERGY", "MP%"),
-            Rune("1-STAR ENERGY RUNE - SLOT 6", "An Energy rune of rating 1 at slot 6", mpf("1e6"), mpf("0"), 1, 6,
-                 "ENERGY", "ATK"),
-            Rune("1-STAR ENERGY RUNE - SLOT 6", "An Energy rune of rating 1 at slot 6", mpf("1e6"), mpf("0"), 1, 6,
-                 "ENERGY", "ATK%"),
-            Rune("1-STAR ENERGY RUNE - SLOT 6", "An Energy rune of rating 1 at slot 6", mpf("1e6"), mpf("0"), 1, 6,
-                 "ENERGY", "DEF"),
-            Rune("1-STAR ENERGY RUNE - SLOT 6", "An Energy rune of rating 1 at slot 6", mpf("1e6"), mpf("0"), 1, 6,
-                 "ENERGY", "DEF%"),
-            Rune("1-STAR ENERGY RUNE - SLOT 6", "An Energy rune of rating 1 at slot 6", mpf("1e6"), mpf("0"), 1, 6,
-                 "ENERGY", "SPD"),
-            Rune("1-STAR ENERGY RUNE - SLOT 6", "An Energy rune of rating 1 at slot 6", mpf("1e6"), mpf("0"), 1, 6,
-                 "ENERGY", "CR"),
-            Rune("1-STAR ENERGY RUNE - SLOT 6", "An Energy rune of rating 1 at slot 6", mpf("1e6"), mpf("0"), 1, 6,
-                 "ENERGY", "CD"),
-            Rune("1-STAR ENERGY RUNE - SLOT 6", "An Energy rune of rating 1 at slot 6", mpf("1e6"), mpf("0"), 1, 6,
-                 "ENERGY", "RES"),
-            Rune("1-STAR ENERGY RUNE - SLOT 6", "An Energy rune of rating 1 at slot 6", mpf("1e6"), mpf("0"), 1, 6,
-                 "ENERGY", "ACC"),
-            AwakenShard(mpf("1e6"), mpf("10"), "Hellchnoth"),
-            AwakenShard(mpf("1e6"), mpf("10"), "Chichoo"),
-            AwakenShard(mpf("1e6"), mpf("10"), "Hylso"),
-            AwakenShard(mpf("1e6"), mpf("10"), "Banngod"),
-            AwakenShard(mpf("1e6"), mpf("10"), "Manrud"),
-            AwakenShard(mpf("1e6"), mpf("10"), "Avaffaip"),
-            AwakenShard(mpf("1e6"), mpf("10"), "Meppee"),
-            EXPShard(mpf("1e6"), mpf("10"), mpf("1e5")),
-            LevelUpShard(mpf("1e6"), mpf("10")),
-            SkillLevelUpShard(mpf("1e6"), mpf("10")),
-            Scroll("UNKNOWN", "A scroll to summon 1-STAR to 3-STAR legendary creatures.", mpf("1e6"), mpf("10"),
-                   potential_legendary_creatures)
-        ]),
-    ])
-
     # Initialising potential CPU players the player can face
     potential_cpu_players: list = [
         Player("CPU #1"),
@@ -4059,7 +3687,7 @@ def main():
         name: str = input("Please enter your name: ")
         player_data: Player = Player(name)
         new_game = Game(player_data, potential_legendary_creatures, fusion_legendary_creatures, item_shop,
-                        building_shop, battle_arena, battle_areas)
+                        battle_arena, battle_areas)
 
     # Getting the current date and time
     old_now: datetime = datetime.now()
@@ -4072,915 +3700,14 @@ def main():
 
         # Updating the old time
         new_now: datetime = datetime.now()
+
+        # TODO: continue to add code related to gameplay
         time_difference = new_now - old_now
         seconds: int = time_difference.seconds
         old_now = new_now
 
-        # Resetting all temple of wishes if possible
-        if new_now.day != old_now.day:
-            for island in new_game.player_data.player_base.get_islands():
-                for x in range(island.ISLAND_WIDTH):
-                    for y in range(island.ISLAND_WIDTH):
-                        curr_tile: IslandTile = island.get_tile_at(x, y)
-                        if isinstance(curr_tile.building, TempleOfWishes):
-                            temple_of_wishes: TempleOfWishes = curr_tile.building
-                            temple_of_wishes.restore()
-                            temple_of_wishes.reset_wishes_left()
-
         # Increase player's EXP, gold, and gems
         new_game.player_data.exp += new_game.player_data.exp_per_second * seconds
-        new_game.player_data.level_up()
-        new_game.player_data.gold += new_game.player_data.gold_per_second * seconds
-        new_game.player_data.gems += new_game.player_data.gems_per_second * seconds
-
-        # Increase the exp of all legendary creatures owned by the player
-        for legendary_creature in new_game.player_data.legendary_creature_inventory.get_legendary_creatures():
-            legendary_creature.exp += legendary_creature.exp_per_second * seconds
-            legendary_creature.level_up()
-
-        # Asking the player what he/she wants to do in the game.
-        allowed: list = ["PLAY ADVENTURE MODE", "MANAGE PLAYER BASE", "MANAGE BATTLE TEAM",
-                         "MANAGE LEGENDARY CREATURE INVENTORY", "MANAGE ITEM INVENTORY", "MAKE A WISH",
-                         "FUSE LEGENDARY CREATURES", "SUMMON LEGENDARY CREATURE", "GIVE ITEM",
-                         "POWER UP LEGENDARY CREATURE", "EVOLVE LEGENDARY CREATURE", "MANAGE TRAINING AREA",
-                         "PLACE RUNE", "REMOVE RUNE", "BUY ITEM", "VIEW STATS"]
-        print("Enter 'PLAY ADVENTURE MODE' to play in adventure mode.")
-        print("Enter 'MANAGE PLAYER BASE' to manage your player base.")
-        print("Enter 'MANAGE BATTLE TEAM' to manage your battle team.")
-        print("Enter 'MANAGE LEGENDARY CREATURE INVENTORY' to manage your legendary creature inventory.")
-        print("Enter 'MANAGE ITEM INVENTORY' to manage your item inventory.")
-        print("Enter 'MAKE A WISH' to make a wish in a temple of wishes.")
-        print("Enter 'FUSE LEGENDARY CREATURES' to fuse legendary creatures using a fusion center.")
-        print("Enter 'SUMMON LEGENDARY CREATURE' to summon a legendary creature.")
-        print("Enter 'GIVE ITEM' to give an item to a legendary creature.")
-        print("Enter 'POWER UP LEGENDARY CREATURE' to power up legendary creatures.")
-        print("Enter 'EVOLVE LEGENDARY CREATURE' to evolve legendary creatures.")
-        print("Enter 'MANAGE TRAINING AREA' to manage your training area.")
-        print("Enter 'PLACE RUNE' to place a rune on a legendary creature.")
-        print("Enter 'REMOVE RUNE' to remove a rune from a legendary creature.")
-        print("Enter 'BUY ITEM' to purchase an item from the item shop.")
-        print("Enter 'VIEW STATS' to view your stats.")
-        action: str = input("What do you want to do? ")
-        if action not in allowed:
-            # Saving game data and quitting the game
-            save_game_data(new_game, file_name)
-            sys.exit()
-        else:
-            # TODO: add code for each action chosen by the player
-            if action == "VIEW STATS":
-                # Clearing the command line window
-                clear()
-
-                # Display player's stats
-                print(new_game.player_data)
-            elif action == "BUY ITEM":
-                # Clearing the command line window
-                clear()
-
-                # Show a list of items which the player can buy
-                item_list: list = new_game.item_shop.get_items_sold()
-                for item in item_list:
-                    print(str(item) + "\n")
-
-                item_index: int = int(input("Please enter the index of the item you want to buy (1 - " +
-                                            str(len(item_list)) + "): "))
-                while item_index < 1 or item_index > len(item_list):
-                    item_index: int = int(input("Sorry, invalid input! Please enter the index of the item you want "
-                                                "to buy (1 - " + str(len(item_list)) + "): "))
-
-                item_to_buy: Item = item_list[item_index - 1]
-                if new_game.player_data.purchase_item(item_to_buy):
-                    print("You have successfully bought " + str(item_to_buy.name))
-                else:
-                    print("Sorry, you have insufficient coins and/or gems!")
-            elif action == "REMOVE RUNE":
-                # Clearing up the command line window
-                clear()
-
-                # Allow the player to remove a rune if there are legendary creatures in the legendary creature
-                # inventory.
-                if len(new_game.player_data.legendary_creature_inventory.get_legendary_creatures()) > 0:
-                    print("Below is a list of legendary creatures you have.\n")
-                    for legendary_creature in new_game.player_data.legendary_creature_inventory.get_legendary_creatures():
-                        print(str(legendary_creature) + "\n")
-
-                    legendary_creature_index: int = int(input("Please enter the index of the legendary creature "
-                                                              "you want to remove a rune from (1 - " +
-                                                              str(len(new_game.player_data.legendary_creature_inventory.
-                                                                      get_legendary_creatures())) + "): "))
-                    while legendary_creature_index < 1 or legendary_creature_index > \
-                            len(new_game.player_data.legendary_creature_inventory.get_legendary_creatures()):
-                        legendary_creature_index = int(input("Sorry, invalid input! Please enter the index of the "
-                                                             "legendary creature you want to remove a rune from "
-                                                             "(1 - " +
-                                                             str(len(new_game.player_data.legendary_creature_inventory.
-                                                                     get_legendary_creatures())) + "): "))
-
-                    chosen_legendary_creature: LegendaryCreature = \
-                        new_game.player_data.legendary_creature_inventory.get_legendary_creatures() \
-                            [legendary_creature_index - 1]
-
-                    slot_number: int = int(input("Please enter the slot number of the rune you want to remove "
-                                                 "(1 - 6): "))
-                    while slot_number < 1 or slot_number > 6:
-                        slot_number = int(
-                            input("Sorry, invalid input! Please enter the slot number of the rune you want to "
-                                  "remove (1 - 6): "))
-
-                    chosen_legendary_creature.remove_rune(slot_number)
-
-            elif action == "PLACE RUNE":
-                # Clearing up the command line window
-                clear()
-
-                # Allow the player to place a rune if there are legendary creatures in the legendary creature
-                # inventory.
-                if len(new_game.player_data.legendary_creature_inventory.get_legendary_creatures()) > 0:
-                    print("Below is a list of legendary creatures you have.\n")
-                    for legendary_creature in new_game.player_data.legendary_creature_inventory.get_legendary_creatures():
-                        print(str(legendary_creature) + "\n")
-
-                    legendary_creature_index: int = int(input("Please enter the index of the legendary creature "
-                                                              "you want to place a rune on (1 - " +
-                                                              str(len(new_game.player_data.legendary_creature_inventory.
-                                                                      get_legendary_creatures())) + "): "))
-                    while legendary_creature_index < 1 or legendary_creature_index > \
-                            len(new_game.player_data.legendary_creature_inventory.get_legendary_creatures()):
-                        legendary_creature_index = int(input("Sorry, invalid input! Please enter the index of the "
-                                                             "legendary creature you want to place a rune on "
-                                                             "(1 - " +
-                                                             str(len(new_game.player_data.legendary_creature_inventory.
-                                                                     get_legendary_creatures())) + "): "))
-
-                    chosen_legendary_creature: LegendaryCreature = \
-                        new_game.player_data.legendary_creature_inventory.get_legendary_creatures() \
-                            [legendary_creature_index - 1]
-
-                    runes: list = []  # initial value
-                    for item in new_game.player_data.item_inventory.get_items():
-                        if isinstance(item, Rune):
-                            runes.append(item)
-
-                    print("Enter 'Y' for yes.")
-                    print("Enter anything else for no.")
-                    place_rune: str = input(
-                        "Do you want to place a rune to " + str(chosen_legendary_creature.name) + "? ")
-                    if place_rune == "Y":
-                        if len(runes) > 0:
-                            print("Below is a list of runes you have.\n")
-                            for rune in runes:
-                                print(str(rune) + "\n")
-
-                            rune_index: int = int(input("Please enter the index of the rune you want to place to "
-                                                        "this legendary creature (1 - " + str(len(runes)) + "): "))
-                            while rune_index < 1 or rune_index > len(runes):
-                                rune_index = int(input(
-                                    "Sorry, invalid input! Please enter the index of the rune you want to place to "
-                                    "this legendary creature (1 - " + str(len(runes)) + "): "))
-
-                            chosen_rune: Rune = runes[rune_index - 1]
-                            chosen_legendary_creature.place_rune(chosen_rune)
-
-            elif action == "MANAGE TRAINING AREA":
-                # Clearing up the command line window
-                clear()
-
-                # Getting a list of training areas in the player's base
-                training_areas: list = []  # initial value
-                for island in new_game.player_data.player_base.get_islands():
-                    for x in range(island.ISLAND_WIDTH):
-                        for y in range(island.ISLAND_WIDTH):
-                            curr_tile: IslandTile = island.get_tile_at(x, y)
-                            if isinstance(curr_tile.building, TrainingArea):
-                                training_areas.append(curr_tile.building)
-
-                # If there are training areas, ask the player which training area he/she wants to manage.
-                if len(training_areas) > 0:
-                    print("Below is a list of training areas that you have.")
-                    for training_area in training_areas:
-                        print(str(training_area) + "\n")
-
-                    training_area_index: int = int(input("Please enter the index of the training area you want to "
-                                                         "manage (1 - " + str(len(training_areas)) + "): "))
-                    while training_area_index < 1 or training_area_index > len(training_areas):
-                        training_area_index = int(input("Sorry, invalid input! Please enter the index of the training "
-                                                        "area "
-                                                        "you want to manage (1 - " + str(len(training_areas)) + "): "))
-
-                    chosen_training_area: TrainingArea = training_areas[training_area_index - 1]
-
-                    # Checking whether a legendary creature can be added to the chosen training area or not.
-                    if len(chosen_training_area.get_legendary_creatures_placed()) < \
-                            chosen_training_area.MAX_LEGENDARY_CREATURES:
-                        # Printing a list of legendary creatures the player can add to the training area
-                        available_legendary_creatures: list = []  # initial value
-                        for legendary_creature in new_game.player_data.legendary_creature_inventory.get_legendary_creatures():
-                            if legendary_creature not in new_game.player_data.battle_team.get_legendary_creatures() and \
-                                    not legendary_creature.placed_in_training_area:
-                                available_legendary_creatures.append(legendary_creature)
-
-                        if len(available_legendary_creatures) > 0:
-                            print("Enter 'Y' for yes.")
-                            print("Enter anything else for no.")
-                            add_legendary_creature: str = input("Do you want to add a legendary creature to the "
-                                                                "training area? ")
-                            if add_legendary_creature == "Y":
-                                print("Below is a list of legendary creatures which you can add to the training area.")
-                                for legendary_creature in available_legendary_creatures:
-                                    print(str(legendary_creature) + "\n")
-
-                                legendary_creature_index: int = int(
-                                    input("Please enter the index of the legendary creature "
-                                          "you want to add to the training area (1 - " +
-                                          str(len(available_legendary_creatures)) + "): "))
-                                while legendary_creature_index < 1 or legendary_creature_index > \
-                                        len(available_legendary_creatures):
-                                    legendary_creature_index = int(
-                                        input("Sorry, invalid input! Please enter the index of the "
-                                              "legendary creature you want to add to the training "
-                                              "area (1 - " +
-                                              str(len(available_legendary_creatures)) + "): "))
-
-                                legendary_creature_to_add: LegendaryCreature = \
-                                    available_legendary_creatures[legendary_creature_index - 1]
-                                new_game.player_data.add_legendary_creature_to_training_area(legendary_creature_to_add,
-                                                                                             chosen_training_area)
-
-                    # Checking whether a legendary creature can be removed from the chosen training area or not.
-                    if len(chosen_training_area.get_legendary_creatures_placed()) > 0:
-                        print("Enter 'Y' for yes.")
-                        print("Enter anything else for no.")
-                        remove_legendary_creature: str = input("Do you want to remove a legendary creature from the "
-                                                               "training area? ")
-                        if remove_legendary_creature == "Y":
-                            # Printing a list of legendary creatures in the chosen training area
-                            for legendary_creature in chosen_training_area.get_legendary_creatures_placed():
-                                print(str(legendary_creature) + "\n")
-
-                            legendary_creature_index: int = int(input("Please enter the index of the legendary "
-                                                                      "creature "
-                                                                      "you want to remove from the training area (1 - " +
-                                                                      str(len(chosen_training_area.
-                                                                              get_legendary_creatures_placed())) + "): "))
-                            while legendary_creature_index < 1 or legendary_creature_index > \
-                                    len(chosen_training_area.get_legendary_creatures_placed()):
-                                legendary_creature_index = int(input("Sorry, invalid input! Please enter the index of "
-                                                                     "the "
-                                                                     "legendary creature "
-                                                                     "you want to remove from the training area (1 - " +
-                                                                     str(len(chosen_training_area.
-                                                                             get_legendary_creatures_placed())) + "): "))
-
-                            legendary_creature_to_remove: LegendaryCreature = \
-                                chosen_training_area.get_legendary_creatures_placed()[legendary_creature_index - 1]
-                            new_game.player_data.remove_legendary_creature_from_training_area \
-                                (legendary_creature_to_remove, chosen_training_area)
-
-            elif action == "EVOLVE LEGENDARY CREATURE":
-                # Clearing up the command line window
-                clear()
-
-                # Getting a list of power-up circles in the player's base
-                power_up_circles: list = []  # initial value
-                for island in new_game.player_data.player_base.get_islands():
-                    for x in range(island.ISLAND_WIDTH):
-                        for y in range(island.ISLAND_WIDTH):
-                            curr_tile: IslandTile = island.get_tile_at(x, y)
-                            if isinstance(curr_tile.building, PowerUpCircle):
-                                power_up_circles.append(curr_tile.building)
-
-                # If there are power up circles, ask the player which power-up circle he/she wants to use
-                if len(power_up_circles) > 0:
-                    print("Below is a list of power up circles that you have.")
-                    for power_up_circle in power_up_circles:
-                        print(str(power_up_circle) + "\n")
-
-                    power_up_circle_index: int = int(input("Please enter the index of the power-up circle you want to "
-                                                           "use (1 - " + str(len(power_up_circles)) + "): "))
-                    while power_up_circle_index < 1 or power_up_circle_index > len(power_up_circles):
-                        power_up_circle_index = int(
-                            input("Sorry, invalid input! Please enter the index of the power-up circle you want to "
-                                  "use (1 - " + str(len(power_up_circles)) + "): "))
-
-                    chosen_power_up_circle: PowerUpCircle = power_up_circles[power_up_circle_index - 1]
-
-                    # Ask the player to choose the legendary creature to be evolved and the materials used if
-                    # possible
-                    if len(new_game.player_data.legendary_creature_inventory.get_legendary_creatures()) > 0:
-                        # Printing all the legendary creatures the player has.
-                        for legendary_creature in \
-                                new_game.player_data.legendary_creature_inventory.get_legendary_creatures():
-                            print(str(legendary_creature) + "\n")
-
-                        # Ask the player to choose the legendary creature to be evolved
-                        to_be_evolved_index: int = int(input("Please enter the index of the legendary creature "
-                                                             "you want to evolve (1 - " +
-                                                             str(len(new_game.
-                                                                     player_data.legendary_creature_inventory.get_legendary_creatures())) +
-                                                             "): "))
-                        while to_be_evolved_index < 1 or to_be_evolved_index > \
-                                len(new_game.player_data.legendary_creature_inventory.get_legendary_creatures()):
-                            to_be_evolved_index = int(
-                                input("Sorry, invalid input! Please enter the index of the legendary creature "
-                                      "you want to evolve (1 - " +
-                                      str(len(new_game.
-                                              player_data.legendary_creature_inventory.get_legendary_creatures())) +
-                                      "): "))
-
-                        to_be_evolved: LegendaryCreature = new_game.player_data.legendary_creature_inventory. \
-                            get_legendary_creatures()[to_be_evolved_index - 1]
-
-                        materials_to_use: list = []
-                        num_materials: int = int(input("How many material legendary creatures do you want to place "
-                                                       "(0-" +
-                                                       str(min(5,
-                                                               len(new_game.player_data.legendary_creature_inventory.
-                                                                   get_legendary_creatures()))) +
-                                                       "_: "))
-
-                        while num_materials < 0 or num_materials > 5 or num_materials > \
-                                len(new_game.player_data.legendary_creature_inventory.get_legendary_creatures()) - 1:
-                            num_materials = int(input("Sorry, invalid input! How many material legendary creatures do "
-                                                      "you want to place "
-                                                      "(0-" +
-                                                      str(min(5,
-                                                              len(new_game.player_data.legendary_creature_inventory.
-                                                                  get_legendary_creatures()))) +
-                                                      "_: "))
-
-                        legendary_creature_options: list = new_game.player_data.legendary_creature_inventory. \
-                            get_legendary_creatures()
-                        legendary_creature_options.remove(to_be_evolved)
-                        for i in range(num_materials):
-                            print("Below is a list of legendary creatures you can choose as a material.\n")
-                            for legendary_creature in legendary_creature_options:
-                                print(str(legendary_creature) + "\n")
-
-                            chosen_legendary_creature_index: int = int(input("Please enter the index of the legendary "
-                                                                             "creature you want to use as a material "
-                                                                             "(1 - " +
-                                                                             str(len(legendary_creature_options)) +
-                                                                             ": "))
-                            while chosen_legendary_creature_index < 1 or chosen_legendary_creature_index > \
-                                    len(legendary_creature_options):
-                                chosen_legendary_creature_index = int(
-                                    input("Sorry, invalid input! Please enter the index of the legendary "
-                                          "creature you want to use as a material "
-                                          "(1 - " +
-                                          str(len(legendary_creature_options)) +
-                                          ": "))
-
-                            chosen_material: LegendaryCreature = legendary_creature_options \
-                                [chosen_legendary_creature_index - 1]
-                            materials_to_use.append(chosen_material)
-                            legendary_creature_options.remove(chosen_material)
-
-                        new_game.player_data.evolve_legendary_creature(to_be_evolved, materials_to_use,
-                                                                       chosen_power_up_circle)
-
-            elif action == "POWER UP LEGENDARY CREATURE":
-                # Clearing up the command line window
-                clear()
-
-                # Getting a list of power-up circles in the player's base
-                power_up_circles: list = []  # initial value
-                for island in new_game.player_data.player_base.get_islands():
-                    for x in range(island.ISLAND_WIDTH):
-                        for y in range(island.ISLAND_WIDTH):
-                            curr_tile: IslandTile = island.get_tile_at(x, y)
-                            if isinstance(curr_tile.building, PowerUpCircle):
-                                power_up_circles.append(curr_tile.building)
-
-                # If there are power up circles, ask the player which power-up circle he/she wants to use
-                if len(power_up_circles) > 0:
-                    print("Below is a list of power up circles that you have.")
-                    for power_up_circle in power_up_circles:
-                        print(str(power_up_circle) + "\n")
-
-                    power_up_circle_index: int = int(input("Please enter the index of the power-up circle you want to "
-                                                           "use (1 - " + str(len(power_up_circles)) + "): "))
-                    while power_up_circle_index < 1 or power_up_circle_index > len(power_up_circles):
-                        power_up_circle_index = int(
-                            input("Sorry, invalid input! Please enter the index of the power-up circle you want to "
-                                  "use (1 - " + str(len(power_up_circles)) + "): "))
-
-                    chosen_power_up_circle: PowerUpCircle = power_up_circles[power_up_circle_index - 1]
-
-                    # Ask the player to choose the legendary creature to be powered up and the materials used if
-                    # possible
-                    if len(new_game.player_data.legendary_creature_inventory.get_legendary_creatures()) > 0:
-                        # Printing all the legendary creatures the player has.
-                        for legendary_creature in \
-                                new_game.player_data.legendary_creature_inventory.get_legendary_creatures():
-                            print(str(legendary_creature) + "\n")
-
-                        # Ask the player to choose the legendary creature to be powered up
-                        to_be_powered_up_index: int = int(input("Please enter the index of the legendary creature "
-                                                                "you want to power-up (1 - " +
-                                                                str(len(new_game.
-                                                                        player_data.legendary_creature_inventory.get_legendary_creatures())) +
-                                                                "): "))
-                        while to_be_powered_up_index < 1 or to_be_powered_up_index > \
-                                len(new_game.player_data.legendary_creature_inventory.get_legendary_creatures()):
-                            to_be_powered_up_index = int(
-                                input("Sorry, invalid input! Please enter the index of the legendary creature "
-                                      "you want to power-up (1 - " +
-                                      str(len(new_game.
-                                              player_data.legendary_creature_inventory.get_legendary_creatures())) +
-                                      "): "))
-
-                        to_be_powered_up: LegendaryCreature = new_game.player_data.legendary_creature_inventory. \
-                            get_legendary_creatures()[to_be_powered_up_index - 1]
-
-                        materials_to_use: list = []
-                        num_materials: int = int(input("How many material legendary creatures do you want to place "
-                                                       "(0-" +
-                                                       str(min(5,
-                                                               len(new_game.player_data.legendary_creature_inventory.
-                                                                   get_legendary_creatures()))) +
-                                                       "_: "))
-
-                        while num_materials < 0 or num_materials > 5 or num_materials > \
-                                len(new_game.player_data.legendary_creature_inventory.get_legendary_creatures()) - 1:
-                            num_materials = int(input("Sorry, invalid input! How many material legendary creatures do "
-                                                      "you want to place "
-                                                      "(0-" +
-                                                      str(min(5,
-                                                              len(new_game.player_data.legendary_creature_inventory.
-                                                                  get_legendary_creatures()))) +
-                                                      "_: "))
-
-                        legendary_creature_options: list = new_game.player_data.legendary_creature_inventory. \
-                            get_legendary_creatures()
-                        legendary_creature_options.remove(to_be_powered_up)
-                        for i in range(num_materials):
-                            print("Below is a list of legendary creatures you can choose as a material.\n")
-                            for legendary_creature in legendary_creature_options:
-                                print(str(legendary_creature) + "\n")
-
-                            chosen_legendary_creature_index: int = int(input("Please enter the index of the legendary "
-                                                                             "creature you want to use as a material "
-                                                                             "(1 - " +
-                                                                             str(len(legendary_creature_options)) +
-                                                                             ": "))
-                            while chosen_legendary_creature_index < 1 or chosen_legendary_creature_index > \
-                                    len(legendary_creature_options):
-                                chosen_legendary_creature_index = int(
-                                    input("Sorry, invalid input! Please enter the index of the legendary "
-                                          "creature you want to use as a material "
-                                          "(1 - " +
-                                          str(len(legendary_creature_options)) +
-                                          ": "))
-
-                            chosen_material: LegendaryCreature = legendary_creature_options \
-                                [chosen_legendary_creature_index - 1]
-                            materials_to_use.append(chosen_material)
-                            legendary_creature_options.remove(chosen_material)
-
-                        new_game.player_data.power_up_legendary_creature(to_be_powered_up, materials_to_use,
-                                                                         chosen_power_up_circle)
-
-            elif action == "GIVE ITEM":
-                # Clearing up the command line window
-                clear()
-
-                # Getting a list of items which are not runes in the player's item inventory
-                non_rune_items: list = [item for item in new_game.player_data.item_inventory.get_items() if not
-                isinstance(item, Rune)]
-
-                # If non-rune items exist and there are legendary creatures in the legendary creature inventory, ask
-                # the player to choose which item is to be given to a legendary creature.
-                if len(non_rune_items) > 0 and \
-                        len(new_game.player_data.legendary_creature_inventory.get_legendary_creatures()) > 0:
-                    print("Below is a list of non-rune items that you have.\n")
-                    for item in non_rune_items:
-                        print(str(item) + "\n")
-
-                    item_index: int = int(input("Please enter the index of the item you want to give (1 - " +
-                                                str(len(non_rune_items)) + "): "))
-                    while item_index < 1 or item_index > len(non_rune_items):
-                        item_index = int(input("Sorry, invalid input! Please enter the index of the item you want to "
-                                               "give (1 - " +
-                                               str(len(non_rune_items)) + "): "))
-
-                    item_to_give: Item = non_rune_items[item_index - 1]
-                    print("Below is a list of legendary creatures you have.\n")
-                    for legendary_creature in new_game.player_data.legendary_creature_inventory. \
-                            get_legendary_creatures():
-                        print(str(legendary_creature) + "\n")
-
-                    legendary_creature_index: int = int(input("Please enter the index of the legendary creature you "
-                                                              "want to give the item to (1 - " +
-                                                              str(len(new_game.player_data.legendary_creature_inventory.
-                                                                      get_legendary_creatures())) + "): "))
-                    while legendary_creature_index < 1 or legendary_creature_index > len(
-                            new_game.player_data.legendary_creature_inventory.
-                                    get_legendary_creatures()):
-                        legendary_creature_index = int(
-                            input("Sorry, invalid input! Please enter the index of the legendary creature you "
-                                  "want to give the item to (1 - " +
-                                  str(len(new_game.player_data.legendary_creature_inventory.
-                                          get_legendary_creatures())) + "): "))
-
-                    chosen_legendary_creature: LegendaryCreature = new_game.player_data.legendary_creature_inventory. \
-                        get_legendary_creatures()[legendary_creature_index - 1]
-
-                    # Give the item to the chosen legendary creature
-                    if new_game.player_data.give_item_to_legendary_creature(item_to_give, chosen_legendary_creature):
-                        print("You have successfully given " + str(item_to_give.name) + " to " +
-                              str(chosen_legendary_creature.name) + ".")
-                    else:
-                        print("Sorry! Item " + str(item_to_give.name) + " cannot be given to " +
-                              str(chosen_legendary_creature.name) + ".")
-
-            elif action == "SUMMON LEGENDARY CREATURE":
-                # Clearing up the command line window
-                clear()
-
-                # Getting a list of summonhenges in the player's base
-                summonhenges: list = []  # initial value
-                for island in new_game.player_data.player_base.get_islands():
-                    for x in range(island.ISLAND_WIDTH):
-                        for y in range(island.ISLAND_WIDTH):
-                            curr_tile: IslandTile = island.get_tile_at(x, y)
-                            if isinstance(curr_tile.building, Summonhenge):
-                                summonhenges.append(curr_tile.building)
-
-                # Getting a list of scrolls in the player's item inventory
-                scrolls: list = []  # initial value
-                for item in new_game.player_data.item_inventory.get_items():
-                    if isinstance(item, Scroll):
-                        scrolls.append(item)
-
-                # If there are summonhenges and scrolls, ask the player which summonhenge and scroll he/she wants to use
-                if len(summonhenges) > 0 and len(scrolls) > 0:
-                    print("Below is a list of summonhenges that you have.")
-                    for summonhenge in summonhenges:
-                        print(str(summonhenge) + "\n")
-
-                    summonhenge_index: int = int(input("Please enter the index of the summonhenge you want to "
-                                                       "use (1 - " + str(len(summonhenges)) + "): "))
-                    while summonhenge_index < 1 or summonhenge_index > len(summonhenges):
-                        summonhenge_index = int(
-                            input("Sorry, invalid input! Please enter the index of the summonhenge you want to "
-                                  "use (1 - " + str(len(summonhenges)) + "): "))
-
-                    chosen_summonhenge: Summonhenge = summonhenges[summonhenge_index - 1]
-                    print("Below is a list of scrolls that you have.")
-                    for scroll in scrolls:
-                        print(str(scroll) + "\n")
-
-                    scroll_index: int = int(input("Please enter the index of the scroll you want to use "
-                                                  "(1 - " + str(len(scrolls)) + "): "))
-                    while scroll_index < 1 or scroll_index > len(scrolls):
-                        scroll_index = int(input("Sorry, invalid input! Please enter the index of the scroll "
-                                                 "you want to use "
-                                                 "(1 - " + str(len(scrolls)) + "): "))
-
-                    chosen_scroll: Scroll = scrolls[scroll_index - 1]
-                    new_game.player_data.summon_legendary_creature(chosen_scroll, chosen_summonhenge)
-
-            elif action == "FUSE LEGENDARY CREATURES":
-                # Clearing up the command line window
-                clear()
-
-                # Getting a list of fusion centers in the player's base
-                fusion_centers: list = []  # initial value
-                for island in new_game.player_data.player_base.get_islands():
-                    for x in range(island.ISLAND_WIDTH):
-                        for y in range(island.ISLAND_WIDTH):
-                            curr_tile: IslandTile = island.get_tile_at(x, y)
-                            if isinstance(curr_tile.building, FusionCenter):
-                                fusion_centers.append(curr_tile.building)
-
-                potential_material_legendary_creatures: list = [legendary_creature for legendary_creature in
-                                                                new_game.player_data.legendary_creature_inventory.
-                                                                    get_legendary_creatures() if legendary_creature not
-                                                                in new_game.player_data.battle_team.
-                                                                    get_legendary_creatures() and
-                                                                not legendary_creature.placed_in_training_area]
-                # If there are fusion centers and legendary creatures to choose from, ask the user to choose which
-                # fusion center to use.
-                if len(fusion_centers) > 0 and len(potential_material_legendary_creatures) > 0:
-                    print("Below is a list of fusion centers that you have.")
-                    for fusion_center in fusion_centers:
-                        print(str(fusion_center) + "\n")
-
-                    fusion_center_index: int = int(input("Please enter the index of the fusion center you want "
-                                                         "to use (1 - " + str(len(fusion_centers)) + "): "))
-                    while fusion_center_index < 1 or fusion_center_index > len(fusion_centers):
-                        fusion_center_index: int = int(input("Please enter the index of the fusion center you want "
-                                                             "to use (1 - " + str(len(fusion_centers)) + "): "))
-
-                    chosen_fusion_center: FusionCenter = fusion_centers[fusion_center_index - 1]
-
-                    print("Below is a list of legendary creatures you can fuse to.")
-                    for fusion_legendary_creature in chosen_fusion_center.get_fusion_legendary_creatures():
-                        print(str(fusion_legendary_creature) + "\n")
-
-                    fusion_legendary_creature_index: int = int(input("Please enter the index of the fusion legendary "
-                                                                     "creature you want to fuse to (1 - "
-                                                                     + str(len(chosen_fusion_center.
-                                                                               get_fusion_legendary_creatures())) +
-                                                                     "): "))
-                    while fusion_legendary_creature_index < 1 or fusion_legendary_creature_index > len(
-                            chosen_fusion_center.
-                                    get_fusion_legendary_creatures()):
-                        fusion_legendary_creature_index = int(
-                            input("Sorry, invalid input! Please enter the index of the fusion legendary "
-                                  "creature you want to fuse to (1 - "
-                                  + str(len(chosen_fusion_center.
-                                            get_fusion_legendary_creatures())) +
-                                  "): "))
-
-                    chosen_fusion_legendary_creature: FusionLegendaryCreature = chosen_fusion_center. \
-                        get_fusion_legendary_creatures()[fusion_legendary_creature_index - 1]
-                    print("Below is a list of material legendary creatures for fusion to " +
-                          str(chosen_fusion_legendary_creature.name) + ".")
-                    for material in chosen_fusion_legendary_creature.get_material_legendary_creatures():
-                        print(str(material) + "\n")
-
-                    chosen_material_legendary_creatures: list = []  # initial value
-
-                    num_materials: int = int(input("How many material legendary creatures do you want to place (0 - " +
-                                                   str(min(5, len(potential_material_legendary_creatures))) + "): "))
-                    for i in range(num_materials):
-                        print("Below is a list of legendary creatures which you can use as the materials.")
-                        for material_legendary_creature in potential_material_legendary_creatures:
-                            print(str(material_legendary_creature) + "\n")
-
-                        material_index: int = int(input("Please enter the index of the material legendary creature "
-                                                        "you want to select (1 - " +
-                                                        str(len(potential_material_legendary_creatures)) + "): "))
-                        while material_index < 1 or material_index > len(potential_material_legendary_creatures):
-                            material_index = int(input("Sorry, invalid input! Please enter the index of the "
-                                                       "material legendary creature "
-                                                       "you want to select (1 - " +
-                                                       str(len(potential_material_legendary_creatures)) + "): "))
-
-                        chosen_material_legendary_creature: LegendaryCreature = potential_material_legendary_creatures \
-                            [material_index]
-                        if chosen_material_legendary_creature.name not in [legendary_creature.name for
-                                                                           legendary_creature in
-                                                                           chosen_fusion_legendary_creature.
-                                                                                   get_material_legendary_creatures()]:
-                            break
-                        else:
-                            chosen_material_legendary_creatures.append(chosen_material_legendary_creature)
-                            potential_material_legendary_creatures.remove(chosen_material_legendary_creature)
-
-                    new_game.player_data.fuse_legendary_creatures(chosen_material_legendary_creatures,
-                                                                  chosen_fusion_legendary_creature,
-                                                                  chosen_fusion_center)
-
-            elif action == "MAKE A WISH":
-                # Clearing up the command line window
-                clear()
-
-                # Getting a list of temples of wishes in the player's base
-                temples_of_wishes: list = []  # initial value
-                for island in new_game.player_data.player_base.get_islands():
-                    for x in range(island.ISLAND_WIDTH):
-                        for y in range(island.ISLAND_WIDTH):
-                            curr_tile: IslandTile = island.get_tile_at(x, y)
-                            if isinstance(curr_tile.building, TempleOfWishes):
-                                temples_of_wishes.append(curr_tile.building)
-
-                # If there are temples of wishes, ask the player to choose which temple of wishes he/she wants to use
-                if len(temples_of_wishes) > 0:
-                    print("Below is a list of temples of wishes you can use.")
-                    for temple_of_wishes in temples_of_wishes:
-                        print(str(temple_of_wishes) + "\n")
-
-                    temple_of_wishes_index: int = int(input("Please enter the index of the temple of wishes "
-                                                            "you want to use (1 - " +
-                                                            str(len(temples_of_wishes)) + "): "))
-                    while temple_of_wishes_index < 1 or temple_of_wishes_index > len(temples_of_wishes):
-                        temple_of_wishes_index = int(input("Sorry, invalid input! Please enter the index of the "
-                                                           "temple of wishes "
-                                                           "you want to use (1 - " +
-                                                           str(len(temples_of_wishes)) + "): "))
-
-                    chosen_temple_of_wishes: TempleOfWishes = temples_of_wishes[temple_of_wishes_index - 1]
-                    new_game.player_data.make_a_wish(chosen_temple_of_wishes)
-
-            elif action == "MANAGE ITEM INVENTORY":
-                # Clearing up the command line window
-                clear()
-                if len(new_game.player_data.item_inventory.get_items()) > 0:
-                    print("Below is a list of items in your item inventory.\n")
-                    for item in new_game.player_data.item_inventory.get_items():
-                        print(str(item) + "\n")
-
-                    item_index: int = int(input("Please enter the index of the item you want to sell (1 - " +
-                                                str(len(new_game.player_data.item_inventory.get_items())) + "): "))
-                    while item_index < 1 or item_index > len(new_game.player_data.item_inventory.get_items()):
-                        item_index = int(input("Sorry, invalid input! Please enter the index of the item you "
-                                               "want to sell (1 - " +
-                                               str(len(new_game.player_data.item_inventory.get_items())) + "): "))
-
-                    to_be_sold: Item = new_game.player_data.item_inventory.get_items()[item_index - 1]
-                    new_game.player_data.sell_item(to_be_sold)
-
-                    runes: list = []  # initial value
-                    for item in new_game.player_data.item_inventory.get_items():
-                        if isinstance(item, Rune):
-                            runes.append(item)
-
-                    # Ask the player which rune to level up if there are runes in the item inventory
-                    if len(runes) > 0:
-                        print("Below is a list of runes you have.\n")
-                        for rune in runes:
-                            print(str(rune) + "\n")
-
-                        rune_index: int = int(input("Please enter the index of the rune you want to level "
-                                                    "up (1 - " + str(len(runes)) + "): "))
-                        while rune_index < 1 or rune_index > len(runes):
-                            rune_index = int(input("Sorry, invalid input! Please enter the index of the rune you "
-                                                   "want to level "
-                                                   "up (1 - " + str(len(runes)) + "): "))
-
-                        chosen_rune: Rune = runes[rune_index - 1]
-                        new_game.player_data.level_up_rune(chosen_rune)
-
-            elif action == "MANAGE LEGENDARY CREATURE INVENTORY":
-                # Clearing up the command line window
-                clear()
-                if len(new_game.player_data.legendary_creature_inventory.get_legendary_creatures()) > 0:
-                    print("Below is a list of legendary creatures in your legendary creature inventory.\n")
-                    for legendary_creature in new_game.player_data.legendary_creature_inventory. \
-                            get_legendary_creatures():
-                        print(str(legendary_creature) + "\n")
-
-                    legendary_creature_index: int = int(input("Please enter the index of the legendary creature "
-                                                              "you want to remove (1 - " +
-                                                              str(len(new_game.player_data.
-                                                                      legendary_creature_inventory.
-                                                                      get_legendary_creatures())) + "): "))
-                    while legendary_creature_index < 1 or legendary_creature_index > \
-                            len(new_game.player_data.legendary_creature_inventory.get_legendary_creatures()):
-                        legendary_creature_index = int(input("Sorry, invalid input! Please enter the "
-                                                             "index of the legendary creature "
-                                                             "you want to remove (1 - " +
-                                                             str(len(new_game.player_data.
-                                                                     legendary_creature_inventory.
-                                                                     get_legendary_creatures())) + "): "))
-
-                    to_be_removed: LegendaryCreature = \
-                        new_game.player_data.legendary_creature_inventory.get_legendary_creatures() \
-                            [legendary_creature_index - 1]
-                    new_game.player_data.legendary_creature_inventory.remove_legendary_creature(to_be_removed)
-
-            elif action == "MANAGE BATTLE TEAM":
-                # Clearing up the command line window
-                clear()
-                if len(new_game.player_data.battle_team.get_legendary_creatures()) > 0:
-                    print("Below is a list of legendary creatures in your battle team.\n")
-                    for legendary_creature in new_game.player_data.battle_team.get_legendary_creatures():
-                        print(str(legendary_creature) + "\n")
-
-                    print("Enter 'Y' for yes.")
-                    print("Enter anything else for no.")
-                    remove_legendary_creature: str = input("Do you want to remove a legendary creature from "
-                                                           "your team? ")
-                    if remove_legendary_creature == "Y":
-                        legendary_creature_index: int = int(input("Please enter the index of the legendary "
-                                                                  "creature you want to remove from "
-                                                                  "your battle team (1 - " +
-                                                                  str(len(new_game.player_data.
-                                                                          battle_team.get_legendary_creatures())) +
-                                                                  "): "))
-                        while legendary_creature_index < 1 or legendary_creature_index > \
-                                len(new_game.player_data.battle_team.get_legendary_creatures()):
-                            legendary_creature_index = int(input("Sorry, invalid input! Please enter the index of the "
-                                                                 "legendary "
-                                                                 "creature you want to remove from "
-                                                                 "your battle team (1 - " +
-                                                                 str(len(new_game.player_data.
-                                                                         battle_team.get_legendary_creatures())) +
-                                                                 "): "))
-
-                        to_be_removed: LegendaryCreature = new_game.player_data.battle_team.get_legendary_creatures() \
-                            [legendary_creature_index - 1]
-                        new_game.player_data.battle_team.remove_legendary_creature(to_be_removed)
-
-                if len(new_game.player_data.battle_team.get_legendary_creatures()) < Team.MAX_LEGENDARY_CREATURES:
-                    print("Below is a list of legendary creatures you have.\n")
-                    for legendary_creature in new_game.player_data.legendary_creature_inventory.get_legendary_creatures():
-                        print(str(legendary_creature) + "\n")
-
-                    print("Enter 'Y' for yes.")
-                    print("Enter anything else for no.")
-                    add_legendary_creature: str = input("Do you want to add a legendary creature to your team? ")
-                    if add_legendary_creature == "Y":
-                        legendary_creature_index: int = int(input("Please enter the index of the legendary "
-                                                                  "creature you want to add to your "
-                                                                  "battle team (1 - " +
-                                                                  str(len(new_game.player_data.
-                                                                          legendary_creature_inventory.
-                                                                          get_legendary_creatures())) + "): "))
-                        while legendary_creature_index < 1 or legendary_creature_index > \
-                                len(new_game.player_data.legendary_creature_inventory.get_legendary_creatures()):
-                            legendary_creature_index = int(input("Sorry, invalid input! Please enter the index "
-                                                                 "of the legendary "
-                                                                 "creature you want to add to your "
-                                                                 "battle team (1 - " +
-                                                                 str(len(new_game.player_data.
-                                                                         legendary_creature_inventory.
-                                                                         get_legendary_creatures())) + "): "))
-
-                        to_be_added: LegendaryCreature = \
-                            new_game.player_data.legendary_creature_inventory.get_legendary_creatures() \
-                                [legendary_creature_index - 1]
-                        new_game.player_data.legendary_creature_inventory.add_legendary_creature(to_be_added)
-
-            elif action == "MANAGE PLAYER BASE":
-                # Clearing up the command line window
-                clear()
-
-                # Asking whether the player wants to add a new island to the player base or not
-                print("Enter 'Y' for yes.")
-                print("Enter anything else for no.")
-                add_island: str = input("Do you want to add a new island to your player base for " +
-                                        str(new_game.player_data.player_base.island_build_gold_cost)) + " gold? "
-                if add_island == "Y":
-                    new_game.player_data.add_island_to_player_base()
-
-                # Showing the islands in the player's base
-                island_count: int = 1
-                for island in new_game.player_data.player_base.get_islands():
-                    print("----------ISLAND #" + str(island_count) + "----------")
-                    print(str(island) + "\n")
-                    island_count += 1
-
-                chosen_island_index: int = int(input("Enter the index of the island you want to manage (1 - " +
-                                                     str(len(new_game.player_data.player_base.get_islands())) + "): "))
-                while chosen_island_index < 1 or chosen_island_index > \
-                        len(new_game.player_data.player_base.get_islands()):
-                    chosen_island_index = int(input("Sorry, invalid input! Enter the index of the island "
-                                                    "you want to manage (1 - " +
-                                                    str(len(
-                                                        new_game.player_data.player_base.get_islands())) + "): "))
-
-                chosen_island: Island = new_game.player_data.player_base.get_islands()[chosen_island_index]
-                print("Enter 'LEVEL UP BUILDING' to level up a building at an island tile.")
-                print("Enter 'BUILD BUILDING' to build at an island tile.")
-                print("Enter 'REMOVE BUILDING' to remove a building from an island tile.")
-                valid_sub_actions: list = ["LEVEL UP BUILDING", "BUILD BUILDING", "REMOVE BUILDING"]
-                sub_action: str = input("What do you want to do? ")
-                while sub_action not in valid_sub_actions:
-                    print("Enter 'LEVEL UP BUILDING' to level up a building at an island tile.")
-                    print("Enter 'BUILD BUILDING' to build at an island tile.")
-                    print("Enter 'REMOVE BUILDING' to remove a building from an island tile.")
-                    sub_action = input("Sorry, invalid input! What do you want to do? ")
-
-                if sub_action == "LEVEL UP BUILDING":
-                    tile_x: int = int(input("Please enter x-coordinates of the building to be levelled up: "))
-                    tile_y: int = int(input("Please enter y-coordinates of the building to be levelled up: "))
-                    if new_game.player_data.level_up_building_at_island_tile(chosen_island_index, tile_x, tile_y):
-                        print("You have successfully levelled up " +
-                              str(chosen_island.get_tile_at(tile_x, tile_y).building.name) + "!")
-                    else:
-                        print("Building level up failed!")
-                elif sub_action == "BUILD BUILDING":
-                    tile_x: int = int(input("Please enter x-coordinates of the tile to build at: "))
-                    tile_y: int = int(input("Please enter y-coordinates of the tile to build at: "))
-                    if isinstance(chosen_island.get_tile_at(tile_x, tile_y), IslandTile):
-                        print("Below is a list of buildings you can build on the tile.")
-                        building_count: int = 1
-                        for building in building_shop.get_buildings_sold():
-                            print("BUILDING #" + str(building_count))
-                            print(str(building) + "\n")
-                            building_count += 1
-
-                        building_index: int = int(input("Please enter the index of the building you "
-                                                        "want to build (1 - " +
-                                                        str(len(building_shop.get_buildings_sold()))))
-                        while building_index < 1 or building_index > len(building_shop.get_buildings_sold()):
-                            building_index = int(input("Sorry, invalid input! Please enter the index of "
-                                                       "the building you "
-                                                            "want to build (1 - " +
-                                                            str(len(building_shop.get_buildings_sold()))))
-
-                        to_build: Building = building_shop.get_buildings_sold()[building_index - 1]
-                        if new_game.player_data.build_at_island_tile(chosen_island_index, tile_x, tile_y, to_build):
-                            print("You have successfully built " + str(to_build.name) + "!")
-                        else:
-                            print("Sorry, you cannot build " + str(to_build.name) + "!")
-                    else:
-                        print("Sorry, you cannot build here!")
-                elif sub_action == "REMOVE BUILDING":
-                    tile_x: int = int(input("Please enter x-coordinates of the tile to remove building from: "))
-                    tile_y: int = int(input("Please enter y-coordinates of the tile to remove building from: "))
-                    if new_game.player_data.remove_building_from_island_tile(chosen_island_index, tile_x, tile_y):
-                        print("You have successfully removed a building!")
-                    else:
-                        print("You failed to remove a building!")
-
-            elif action == "PLAY ADVENTURE MODE":
-                pass
-            else:
-                pass
 
         print("Enter 'Y' for yes.")
         print("Enter anything else for no.")
