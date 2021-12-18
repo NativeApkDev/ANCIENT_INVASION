@@ -4978,7 +4978,9 @@ def main():
                         print("You failed to remove a building!")
 
             elif action == "PLAY ADVENTURE MODE":
+                # TODO: add code for adventure mode
                 pass
+
             else:
                 pass
 
