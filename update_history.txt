@@ -1,4 +1,4 @@
-1. Version 1 (Release Date: Sunday, 19 December 2021):
+1. Version 1 (Release Date: Monday, 20 December 2021):
 - Minimal number of legendary creatures (i.e., 6 legendary creatures of rating 1)
 - Minimal number of fusion legendary creatures (i.e., 1 fusion legendary creature of rating 1)
 - Minimal number of battle areas in the game (i.e., 1 battle area, 1 resource dungeon, and 1 item dungeon).

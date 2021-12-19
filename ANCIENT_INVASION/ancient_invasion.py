@@ -1,7 +1,13 @@
 """
 This file contains code for the game "Ancient Invasion".
 Author: NativeApkDev
+
+The game "Ancient Invasion" is inspired by "Summoners War: Sky Arena" 
+(https://play.google.com/store/apps/details?id=com.com2us.smon.normal.freefull.google.kr.android.common&hl=en&gl=US)
+and "Heir of Light" 
+(https://play.google.com/store/apps/details?id=com.gamevil.heiroflight.android.google.global.normal&hl=en&gl=US).
 """
+
 
 # Game version: 1
 
@@ -1844,7 +1850,8 @@ class Team:
             self.__legendary_creatures[0]
 
     def __str__(self):
-        res: str = "Team(leader=" + str(self.leader.name) + ", legendary_creatures=["
+        res: str = "Team(leader=" + str(self.leader.name) + ", legendary_creatures=[" if self.leader is not None else \
+            "Team(leader=None, legendary_creatures=["
         for i in range(len(self.__legendary_creatures)):
             curr_legendary_creature: LegendaryCreature = self.__legendary_creatures[i]
             if i < len(self.__legendary_creatures) - 1:
@@ -2998,7 +3005,7 @@ class PlayerBase:
 
     def __init__(self):
         # type: () -> None
-        self.__islands: list = []  # initial value
+        self.__islands: list = [Island()]  # initial value
         self.island_build_gold_cost: mpf = mpf("1e8")
 
     def __str__(self):
@@ -3009,7 +3016,7 @@ class PlayerBase:
 
     def add_island(self):
         # type: () -> None
-        self.island_build_gold_cost *= mpf("10") ** (triangular(len(self.__islands)) + 1)
+        self.island_build_gold_cost *= mpf("10") ** (triangular(len(self.__islands)))
         self.__islands.append(Island())
 
     def get_islands(self):
@@ -3690,6 +3697,7 @@ class Game:
 
 
 def main():
+    # type: () -> int
     """
     This main function is used to run the game.
     :return: None
@@ -4084,7 +4092,7 @@ def main():
     # Initialising variable for the saved game data
     # Asking the user to enter his/her name to check whether saved game data exists or not
     player_name: str = input("Please enter your name: ")
-    file_name: str = "SAVED ANCIENT INVASION GAME DATA - " + str(player_name).upper()
+    file_name: str = "SAVED_DATA/SAVED ANCIENT INVASION GAME DATA - " + str(player_name).upper()
 
     new_game: Game
     try:
@@ -4944,83 +4952,83 @@ def main():
                 print("Enter 'Y' for yes.")
                 print("Enter anything else for no.")
                 add_island: str = input("Do you want to add a new island to your player base for " +
-                                        str(new_game.player_data.player_base.island_build_gold_cost)) + " gold? "
+                                        str(new_game.player_data.player_base.island_build_gold_cost) + " gold? ")
                 if add_island == "Y":
                     new_game.player_data.add_island_to_player_base()
 
                 # Showing the islands in the player's base
-                island_count: int = 1
-                for island in new_game.player_data.player_base.get_islands():
-                    print("----------ISLAND #" + str(island_count) + "----------")
-                    print(str(island) + "\n")
-                    island_count += 1
+                if len(new_game.player_data.player_base.get_islands()) > 0:
+                    island_count: int = 1
+                    for island in new_game.player_data.player_base.get_islands():
+                        print("----------ISLAND #" + str(island_count) + "----------")
+                        print(str(island) + "\n")
+                        island_count += 1
 
-                chosen_island_index: int = int(input("Enter the index of the island you want to manage (1 - " +
-                                                     str(len(new_game.player_data.player_base.get_islands())) + "): "))
-                while chosen_island_index < 1 or chosen_island_index > \
-                        len(new_game.player_data.player_base.get_islands()):
-                    chosen_island_index = int(input("Sorry, invalid input! Enter the index of the island "
-                                                    "you want to manage (1 - " +
-                                                    str(len(
-                                                        new_game.player_data.player_base.get_islands())) + "): "))
+                    chosen_island_index: int = int(input("Enter the index of the island you want to manage (1 - " +
+                                                         str(len(new_game.player_data.player_base.get_islands())) + "): "))
+                    while chosen_island_index < 1 or chosen_island_index > \
+                            len(new_game.player_data.player_base.get_islands()):
+                        chosen_island_index = int(input("Sorry, invalid input! Enter the index of the island "
+                                                        "you want to manage (1 - " +
+                                                        str(len(
+                                                            new_game.player_data.player_base.get_islands())) + "): "))
 
-                chosen_island: Island = new_game.player_data.player_base.get_islands()[chosen_island_index]
-                print("Enter 'LEVEL UP BUILDING' to level up a building at an island tile.")
-                print("Enter 'BUILD BUILDING' to build at an island tile.")
-                print("Enter 'REMOVE BUILDING' to remove a building from an island tile.")
-                valid_sub_actions: list = ["LEVEL UP BUILDING", "BUILD BUILDING", "REMOVE BUILDING"]
-                sub_action: str = input("What do you want to do? ")
-                while sub_action not in valid_sub_actions:
+                    chosen_island: Island = new_game.player_data.player_base.get_islands()[chosen_island_index - 1]
                     print("Enter 'LEVEL UP BUILDING' to level up a building at an island tile.")
                     print("Enter 'BUILD BUILDING' to build at an island tile.")
                     print("Enter 'REMOVE BUILDING' to remove a building from an island tile.")
-                    sub_action = input("Sorry, invalid input! What do you want to do? ")
+                    valid_sub_actions: list = ["LEVEL UP BUILDING", "BUILD BUILDING", "REMOVE BUILDING"]
+                    sub_action: str = input("What do you want to do? ")
+                    while sub_action not in valid_sub_actions:
+                        print("Enter 'LEVEL UP BUILDING' to level up a building at an island tile.")
+                        print("Enter 'BUILD BUILDING' to build at an island tile.")
+                        print("Enter 'REMOVE BUILDING' to remove a building from an island tile.")
+                        sub_action = input("Sorry, invalid input! What do you want to do? ")
 
-                if sub_action == "LEVEL UP BUILDING":
-                    tile_x: int = int(input("Please enter x-coordinates of the building to be levelled up: "))
-                    tile_y: int = int(input("Please enter y-coordinates of the building to be levelled up: "))
-                    if new_game.player_data.level_up_building_at_island_tile(chosen_island_index, tile_x, tile_y):
-                        print("You have successfully levelled up " +
-                              str(chosen_island.get_tile_at(tile_x, tile_y).building.name) + "!")
-                    else:
-                        print("Building level up failed!")
-                elif sub_action == "BUILD BUILDING":
-                    tile_x: int = int(input("Please enter x-coordinates of the tile to build at: "))
-                    tile_y: int = int(input("Please enter y-coordinates of the tile to build at: "))
-                    if isinstance(chosen_island.get_tile_at(tile_x, tile_y), IslandTile):
-                        print("Below is a list of buildings you can build on the tile.")
-                        building_count: int = 1
-                        for building in building_shop.get_buildings_sold():
-                            print("BUILDING #" + str(building_count))
-                            print(str(building) + "\n")
-                            building_count += 1
-
-                        building_index: int = int(input("Please enter the index of the building you "
-                                                        "want to build (1 - " +
-                                                        str(len(building_shop.get_buildings_sold()))))
-                        while building_index < 1 or building_index > len(building_shop.get_buildings_sold()):
-                            building_index = int(input("Sorry, invalid input! Please enter the index of "
-                                                       "the building you "
-                                                       "want to build (1 - " +
-                                                       str(len(building_shop.get_buildings_sold()))))
-
-                        to_build: Building = building_shop.get_buildings_sold()[building_index - 1]
-                        if new_game.player_data.build_at_island_tile(chosen_island_index, tile_x, tile_y, to_build):
-                            print("You have successfully built " + str(to_build.name) + "!")
+                    if sub_action == "LEVEL UP BUILDING":
+                        tile_x: int = int(input("Please enter x-coordinates of the building to be levelled up: "))
+                        tile_y: int = int(input("Please enter y-coordinates of the building to be levelled up: "))
+                        if new_game.player_data.level_up_building_at_island_tile(chosen_island_index, tile_x, tile_y):
+                            print("You have successfully levelled up " +
+                                  str(chosen_island.get_tile_at(tile_x, tile_y).building.name) + "!")
                         else:
-                            print("Sorry, you cannot build " + str(to_build.name) + "!")
-                    else:
-                        print("Sorry, you cannot build here!")
-                elif sub_action == "REMOVE BUILDING":
-                    tile_x: int = int(input("Please enter x-coordinates of the tile to remove building from: "))
-                    tile_y: int = int(input("Please enter y-coordinates of the tile to remove building from: "))
-                    if new_game.player_data.remove_building_from_island_tile(chosen_island_index, tile_x, tile_y):
-                        print("You have successfully removed a building!")
-                    else:
-                        print("You failed to remove a building!")
+                            print("Building level up failed!")
+                    elif sub_action == "BUILD BUILDING":
+                        tile_x: int = int(input("Please enter x-coordinates of the tile to build at: "))
+                        tile_y: int = int(input("Please enter y-coordinates of the tile to build at: "))
+                        if isinstance(chosen_island.get_tile_at(tile_x, tile_y), IslandTile):
+                            print("Below is a list of buildings you can build on the tile.")
+                            building_count: int = 1
+                            for building in building_shop.get_buildings_sold():
+                                print("BUILDING #" + str(building_count))
+                                print(str(building) + "\n")
+                                building_count += 1
+
+                            building_index: int = int(input("Please enter the index of the building you "
+                                                            "want to build (1 - " +
+                                                            str(len(building_shop.get_buildings_sold()))))
+                            while building_index < 1 or building_index > len(building_shop.get_buildings_sold()):
+                                building_index = int(input("Sorry, invalid input! Please enter the index of "
+                                                           "the building you "
+                                                           "want to build (1 - " +
+                                                           str(len(building_shop.get_buildings_sold()))))
+
+                            to_build: Building = building_shop.get_buildings_sold()[building_index - 1]
+                            if new_game.player_data.build_at_island_tile(chosen_island_index, tile_x, tile_y, to_build):
+                                print("You have successfully built " + str(to_build.name) + "!")
+                            else:
+                                print("Sorry, you cannot build " + str(to_build.name) + "!")
+                        else:
+                            print("Sorry, you cannot build here!")
+                    elif sub_action == "REMOVE BUILDING":
+                        tile_x: int = int(input("Please enter x-coordinates of the tile to remove building from: "))
+                        tile_y: int = int(input("Please enter y-coordinates of the tile to remove building from: "))
+                        if new_game.player_data.remove_building_from_island_tile(chosen_island_index, tile_x, tile_y):
+                            print("You have successfully removed a building!")
+                        else:
+                            print("You failed to remove a building!")
 
             elif action == "PLAY ADVENTURE MODE":
-                # TODO: add code for adventure mode
                 # Clearing up the command line window
                 clear()
 
@@ -5408,6 +5416,10 @@ def main():
                             if chosen_level.next_stage(curr_stage_number) is None:
                                 new_game.player_data.claim_reward(chosen_level.clear_reward)
                                 chosen_level.is_cleared = True
+                                if chosen_map_area.mode != "EASY":
+                                    chosen_level.strengthen_enemies()
+
+                                chosen_level.times_beaten += 1
                             else:
                                 # Move on to the next stage
                                 current_stage = chosen_level.next_stage(curr_stage_number)
@@ -5791,6 +5803,7 @@ def main():
                             if chosen_level.next_stage(curr_stage_number) is None:
                                 new_game.player_data.claim_reward(chosen_level.clear_reward)
                                 chosen_level.is_cleared = True
+                                chosen_level.times_beaten += 1
                             else:
                                 # Move on to the next stage
                                 current_stage = chosen_level.next_stage(curr_stage_number)
@@ -6184,7 +6197,7 @@ def main():
 
     # Saving game data and quitting the game.
     save_game_data(new_game, file_name)
-    sys.exit()
+    return 0
 
 
 if __name__ == '__main__':
