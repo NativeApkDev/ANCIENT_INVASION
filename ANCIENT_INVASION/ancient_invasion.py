@@ -132,6 +132,7 @@ class Action:
             damage_reduction_factor: mpf = mpf("1e8") / (mpf("1e8") + 3.5 * target.defense)
             damage: mpf = raw_damage * damage_reduction_factor
             target.curr_hp -= damage
+            print(str(user.name) + " dealt " + str(damage) + " damage on " + str(target.name) + "!")
             return True
 
         elif self.name == "NORMAL HEAL":
@@ -159,11 +160,13 @@ class Action:
                                                                                               skill_to_use.does_ignore_shield,
                                                                                               skill_to_use.does_ignore_invincibility)
                             enemy.curr_hp -= damage
+                            print(str(user.name) + " dealt " + str(damage) + " damage on " + str(enemy.name) + "!")
 
                             # Considering life drain
                             life_drain: mpf = damage * (user.life_drain_percentage + user.life_drain_percentage_up) \
                                               / 100
                             user.curr_hp += life_drain
+                            print(str(user.name) + " drained " + str(life_drain) + " HP!")
                             if user.curr_hp >= user.max_hp:
                                 user.curr_hp = user.max_hp
 
@@ -244,11 +247,13 @@ class Action:
                                                                                           skill_to_use.does_ignore_shield,
                                                                                           skill_to_use.does_ignore_invincibility)
                         target.curr_hp -= damage
+                        print(str(user.name) + " dealt " + str(damage) + " damage on " + str(target.name) + "!")
 
                         # Considering life drain
                         life_drain: mpf = damage * (user.life_drain_percentage + user.life_drain_percentage_up) \
                                           / 100
                         user.curr_hp += life_drain
+                        print(str(user.name) + " drained " + str(life_drain) + " HP!")
                         if user.curr_hp >= user.max_hp:
                             user.curr_hp = user.max_hp
 
@@ -617,6 +622,18 @@ class Level:
         self.clear_reward: Reward = clear_reward
         self.times_beaten: int = 0  # initial value
 
+    def curr_stage(self, stage_number):
+        # type: (int) -> Stage or None
+        if stage_number < 0 or stage_number >= len(self.__stages):
+            return None
+        return self.__stages[stage_number]
+
+    def next_stage(self, stage_number):
+        # type: (int) -> Stage or None
+        if stage_number < -1 or stage_number >= len(self.__stages) - 1:
+            return None
+        return self.__stages[stage_number + 1]
+
     def __str__(self):
         return '%s(%s)' % (
             type(self).__name__,
@@ -696,6 +713,20 @@ class Player:
             type(self).__name__,
             ', '.join('%s=%s' % item for item in vars(self).items())
         )
+
+    def claim_reward(self, reward):
+        # type: (Reward) -> None
+        self.exp += reward.player_reward_exp
+        self.level_up()
+        self.gold += reward.player_reward_gold
+        self.gems += reward.player_reward_gems
+        for legendary_creature in self.battle_team.get_legendary_creatures():
+            legendary_creature.exp += reward.legendary_creature_reward_exp
+            legendary_creature.level_up()
+
+        self.battle_team.recover_all()
+        for item in reward.get_player_reward_items():
+            self.add_item_to_inventory(item)
 
     def make_a_wish(self, temple_of_wishes):
         # type: (TempleOfWishes) -> bool
@@ -1823,6 +1854,18 @@ class Team:
 
         return res
 
+    def recover_all(self):
+        # type: () -> None
+        for legendary_creature in self.__legendary_creatures:
+            legendary_creature.restore()
+
+    def all_died(self):
+        # type: () -> bool
+        for legendary_creature in self.__legendary_creatures:
+            if legendary_creature.get_is_alive():
+                return False
+        return True
+
     def add_legendary_creature(self, legendary_creature):
         # type: (LegendaryCreature) -> bool
         if len(self.__legendary_creatures) < self.MAX_LEGENDARY_CREATURES:
@@ -2461,7 +2504,7 @@ class LegendaryCreature:
         return False
 
     def have_turn(self, other, active_skill, action_name):
-        # type: (LegendaryCreature, ActiveSkill, str) -> bool
+        # type: (LegendaryCreature, ActiveSkill or None, str) -> bool
         if self.can_use_passive_skills and not self.passive_skills_activated:
             self.use_passive_skills()
 
@@ -2480,7 +2523,7 @@ class LegendaryCreature:
                 self.normal_attack(other)
             elif action_name == "NORMAL HEAL":
                 self.normal_heal(other)
-            elif action_name == "USE SKILL":
+            elif action_name == "USE SKILL" and isinstance(active_skill, ActiveSkill):
                 self.use_skill(other, active_skill)
             else:
                 pass
@@ -4958,8 +5001,8 @@ def main():
                         while building_index < 1 or building_index > len(building_shop.get_buildings_sold()):
                             building_index = int(input("Sorry, invalid input! Please enter the index of "
                                                        "the building you "
-                                                            "want to build (1 - " +
-                                                            str(len(building_shop.get_buildings_sold()))))
+                                                       "want to build (1 - " +
+                                                       str(len(building_shop.get_buildings_sold()))))
 
                         to_build: Building = building_shop.get_buildings_sold()[building_index - 1]
                         if new_game.player_data.build_at_island_tile(chosen_island_index, tile_x, tile_y, to_build):
@@ -4977,7 +5020,427 @@ def main():
                         print("You failed to remove a building!")
 
             elif action == "PLAY ADVENTURE MODE":
-                pass
+                # TODO: add code for adventure mode
+                # Clearing up the command line window
+                clear()
+
+                # Asking the player what he/she wants to do
+                allowed_sub_actions: list = ["MAP AREA", "DUNGEON", "BATTLE ARENA"]
+                print("Enter 'MAP AREA' to play in a map area")
+                print("Enter 'DUNGEON' to play in a dungeon.")
+                print("Enter 'BATTLE ARENA' to battle in the battle arena.")
+                sub_action: str = input("What do you want to do? ")
+                while sub_action not in allowed_sub_actions:
+                    print("Enter 'MAP AREA' to play in a map area")
+                    print("Enter 'DUNGEON' to play in a dungeon.")
+                    print("Enter 'BATTLE ARENA' to battle in the battle arena.")
+                    sub_action = input("Sorry, invalid input! What do you want to do? ")
+
+                if sub_action == "MAP AREA":
+                    # Clearing up the command line window
+                    clear()
+
+                    # Getting a list of map areas for the player to choose from
+                    map_areas: list = [battle_area for battle_area in new_game.get_battle_areas() if
+                                       isinstance(battle_area, MapArea)]
+
+                    # Showing a list of map areas the player can battle in
+                    map_area_index: int = 1  # initial value
+                    for map_area in map_areas:
+                        print("MAP AREA #" + str(map_area_index))
+                        print(str(map_area) + "\n")
+                        map_area_index += 1
+
+                    chosen_map_area_index: int = int(input("Please enter the index of the map area you want "
+                                                           "to battle in (1 - " + str(len(map_areas)) + "): "))
+                    while chosen_map_area_index < 1 or chosen_map_area_index > len(map_areas):
+                        chosen_map_area_index = int(input("Sorry, invalid input! Please enter the index of "
+                                                          "the map area you want "
+                                                          "to battle in (1 - " + str(len(map_areas)) + "): "))
+
+                    chosen_map_area: MapArea = map_areas[chosen_map_area_index - 1]
+
+                    # Displaying a list of levels in the map area which the player can play at
+                    level_list: list = chosen_map_area.get_levels()
+                    curr_level_index: int = 1  # initial value
+                    for level in level_list:
+                        print("LEVEL #" + str(curr_level_index))
+                        print(str(level) + "\n")
+                        curr_level_index += 1
+
+                    level_index: int = int(input("Please enter the index of the level you want to "
+                                                 "battle in (1 - " + str(len(level_list)) + "): "))
+                    while level_index < 1 or level_index > len(level_list):
+                        level_index = int(input("Sorry, invalid input! Please enter the index of the level you want to "
+                                                "battle in (1 - " + str(len(level_list)) + "): "))
+
+                    chosen_level: Level = level_list[level_index - 1]
+
+                    # Start the battle and battle until all stages are cleared
+                    curr_stage_number: int = 0
+                    current_stage: Stage = chosen_level.curr_stage(curr_stage_number)
+                    while chosen_level.next_stage(curr_stage_number) is not None and \
+                            not new_game.player_data.battle_team.all_died():
+                        # Clearing up the command line window
+                        clear()
+
+                        # Show the current stage
+                        print("--------------------STAGE #" + str(curr_stage_number + 1) + "--------------------")
+                        curr_battle: Battle = Battle(new_game.player_data.battle_team,
+                                                     Team(current_stage.get_enemies_list()))
+                        while curr_battle.winner is None:
+                            # Printing out the stats of legendary creatures in both teams
+                            print("Below are the stats of all legendary creatures in player's team.\n")
+                            for legendary_creature in curr_battle.team1.get_legendary_creatures():
+                                print(str(legendary_creature) + "\n")
+
+                            print("Below are the stats of all legendary creatures in enemy's team.\n")
+                            for legendary_creature in curr_battle.team2.get_legendary_creatures():
+                                print(str(legendary_creature) + "\n")
+
+                            # Make a legendary creature move
+                            curr_battle.get_someone_to_move()
+                            assert isinstance(curr_battle.whose_turn, LegendaryCreature), "Cannot proceed with battle!"
+
+                            if not curr_battle.whose_turn.can_move:
+                                # Skip turn
+                                curr_battle.whose_turn.have_turn(curr_battle.whose_turn, None, "NORMAL HEAL")
+
+                                # Make another legendary creature move
+                                curr_battle.get_someone_to_move()
+                                assert isinstance(curr_battle.whose_turn, LegendaryCreature), \
+                                    "Cannot proceed with battle!"
+
+                            # Checking which legendary creature moves
+                            if curr_battle.whose_turn in curr_battle.team1.get_legendary_creatures():
+                                moving_legendary_creature: LegendaryCreature = curr_battle.whose_turn
+                                # Asking the player what he/she wants to do
+                                print("Enter 'NORMAL ATTACK' for normal attack.")
+                                print("Enter 'NORMAL HEAL' for normal heal.")
+                                print("Enter anything else to use a skill (only applicable if you have usable skills).")
+                                usable_skills: list = [skill for skill in curr_battle.whose_turn.get_skills()
+                                                       if curr_battle.whose_turn.curr_magic_points >=
+                                                       skill.magic_points_cost and isinstance(skill, ActiveSkill)]
+                                possible_actions: list = ["NORMAL ATTACK", "NORMAL HEAL"]
+                                trainer_battle_action: str = input("What do you want to do? ")
+                                while len(usable_skills) == 0 and trainer_battle_action not in possible_actions:
+                                    print("Enter 'NORMAL ATTACK' for normal attack.")
+                                    print("Enter 'NORMAL HEAL' for normal heal.")
+                                    trainer_battle_action = input("Sorry, invalid input! What do you want to do? ")
+
+                                if trainer_battle_action not in possible_actions:
+                                    # Use skill
+                                    trainer_battle_action = "USE SKILL"
+
+                                    # Show a list of skills the player can use
+                                    print("Below is a list of skills you can use.\n")
+                                    curr_skill_index: int = 1  # initial value
+                                    for skill in usable_skills:
+                                        print("SKILL #" + str(curr_skill_index))
+                                        print(str(skill) + "\n")
+                                        curr_skill_index += 1
+
+                                    skill_index: int = int(input("Please enter the index of the skill "
+                                                                 "you want to use (1 - " +
+                                                                 str(len(usable_skills)) + "): "))
+                                    while skill_index < 1 or skill_index > len(usable_skills):
+                                        skill_index = int(input("Sorry, invalid input! Please enter the "
+                                                                "index of the skill "
+                                                                "you want to use (1 - " +
+                                                                str(len(usable_skills)) + "): "))
+
+                                    skill_to_use: ActiveSkill = usable_skills[skill_index - 1]
+                                    if skill_to_use.active_skill_type == "ATTACK":
+                                        # Asking the user to select a target
+                                        print("Below is a list of enemies you can attack.")
+                                        enemy_index: int = 1  # initial value
+                                        for enemy in curr_battle.team2.get_legendary_creatures():
+                                            print("ENEMY #" + str(enemy_index))
+                                            print(str(enemy) + "\n")
+                                            enemy_index += 1
+
+                                        chosen_enemy_index: int = int(input("Please enter the index of the "
+                                                                            "enemy you want to attack (1 - " +
+                                                                            str(len(curr_battle.
+                                                                                    team2.get_legendary_creatures())) +
+                                                                            "): "))
+                                        while chosen_enemy_index < 1 or chosen_enemy_index > len(curr_battle.
+                                                                                                         team2.get_legendary_creatures()):
+                                            chosen_enemy_index = int(input("Sorry, invalid input! "
+                                                                           "Please enter the index of the "
+                                                                           "enemy you want to attack (1 - " +
+                                                                           str(len(curr_battle.
+                                                                                   team2.get_legendary_creatures())) +
+                                                                           "): "))
+
+                                        chosen_enemy_target: LegendaryCreature = curr_battle.team2. \
+                                            get_legendary_creatures()[chosen_enemy_index - 1]
+                                        curr_battle.whose_turn.have_turn(chosen_enemy_target, skill_to_use,
+                                                                         trainer_battle_action)
+                                        if random.random() < chosen_enemy_target.counterattack_chance + \
+                                                chosen_enemy_target.counterattack_chance_up:
+                                            chosen_enemy_target.counterattack(curr_battle.whose_turn)
+
+                                    elif skill_to_use.active_skill_type == "HEAL":
+                                        # Asking the user to select who to heal
+                                        print("Below is a list of allies you can heal.")
+                                        ally_index: int = 1  # initial value
+                                        for ally in curr_battle.team1.get_legendary_creatures():
+                                            print("ALLY #" + str(ally_index))
+                                            print(str(ally) + "\n")
+                                            ally_index += 1
+
+                                        chosen_ally_index: int = int(input("Please enter the index of the "
+                                                                           "ally you want to heal (1 - " +
+                                                                           str(len(curr_battle.
+                                                                                   team1.get_legendary_creatures())) +
+                                                                           "): "))
+                                        while chosen_ally_index < 1 or chosen_ally_index > len(curr_battle.
+                                                                                                       team1.get_legendary_creatures()):
+                                            chosen_ally_index = int(input("Sorry, invalid input! "
+                                                                          "Please enter the index of the "
+                                                                          "ally you want to heal (1 - " +
+                                                                          str(len(curr_battle.
+                                                                                  team1.get_legendary_creatures())) +
+                                                                          "): "))
+
+                                        chosen_ally_target: LegendaryCreature = curr_battle.team1. \
+                                            get_legendary_creatures()[chosen_ally_index - 1]
+                                        curr_battle.whose_turn.have_turn(chosen_ally_target, skill_to_use,
+                                                                         trainer_battle_action)
+                                    elif skill_to_use.active_skill_type == "ALLIES EFFECT":
+                                        # Asking the user to select who to apply ally effect on
+                                        print("Below is a list of allies you can apply ally effect on.")
+                                        ally_index: int = 1  # initial value
+                                        for ally in curr_battle.team1.get_legendary_creatures():
+                                            print("ALLY #" + str(ally_index))
+                                            print(str(ally) + "\n")
+                                            ally_index += 1
+
+                                        chosen_ally_index: int = int(input("Please enter the index of the "
+                                                                           "ally you want to apply ally effect on (1 - " +
+                                                                           str(len(curr_battle.
+                                                                                   team1.get_legendary_creatures())) +
+                                                                           "): "))
+                                        while chosen_ally_index < 1 or chosen_ally_index > len(curr_battle.
+                                                                                                       team1.get_legendary_creatures()):
+                                            chosen_ally_index = int(input("Sorry, invalid input! "
+                                                                          "Please enter the index of the "
+                                                                          "ally you want to apply ally effect on (1 - " +
+                                                                          str(len(curr_battle.
+                                                                                  team1.get_legendary_creatures())) +
+                                                                          "): "))
+
+                                        chosen_ally_target: LegendaryCreature = curr_battle.team1. \
+                                            get_legendary_creatures()[chosen_ally_index - 1]
+                                        curr_battle.whose_turn.have_turn(chosen_ally_target, skill_to_use,
+                                                                         trainer_battle_action)
+                                    elif skill_to_use.active_skill_type == "ENEMIES EFFECT":
+                                        # Asking the user to select who to apply enemy effect on
+                                        print("Below is a list of enemies you can apply enemy effect on.")
+                                        enemy_index: int = 1  # initial value
+                                        for enemy in curr_battle.team2.get_legendary_creatures():
+                                            print("ENEMY #" + str(enemy_index))
+                                            print(str(enemy) + "\n")
+                                            enemy_index += 1
+
+                                        chosen_enemy_index: int = int(input("Please enter the index of the "
+                                                                            "enemy you want to apply enemy effect on"
+                                                                            " (1 - " +
+                                                                            str(len(curr_battle.
+                                                                                    team2.get_legendary_creatures())) +
+                                                                            "): "))
+                                        while chosen_enemy_index < 1 or chosen_enemy_index > len(curr_battle.
+                                                                                                         team2.get_legendary_creatures()):
+                                            chosen_enemy_index = int(input("Sorry, invalid input! "
+                                                                           "Please enter the index of the "
+                                                                           "enemy you want to apply enemy effect on"
+                                                                           " (1 - " +
+                                                                           str(len(curr_battle.
+                                                                                   team2.get_legendary_creatures())) +
+                                                                           "): "))
+
+                                        chosen_enemy_target: LegendaryCreature = curr_battle.team2. \
+                                            get_legendary_creatures()[chosen_enemy_index - 1]
+                                        curr_battle.whose_turn.have_turn(chosen_enemy_target, skill_to_use,
+                                                                         trainer_battle_action)
+
+                                elif trainer_battle_action == "NORMAL ATTACK":
+                                    # Asking the user to select a target
+                                    print("Below is a list of enemies you can attack.")
+                                    enemy_index: int = 1  # initial value
+                                    for enemy in curr_battle.team2.get_legendary_creatures():
+                                        print("ENEMY #" + str(enemy_index))
+                                        print(str(enemy) + "\n")
+                                        enemy_index += 1
+
+                                    chosen_enemy_index: int = int(input("Please enter the index of the "
+                                                                        "enemy you want to attack (1 - " +
+                                                                        str(len(curr_battle.
+                                                                                team2.get_legendary_creatures())) +
+                                                                        "): "))
+                                    while chosen_enemy_index < 1 or chosen_enemy_index > len(curr_battle.
+                                                                                                     team2.get_legendary_creatures()):
+                                        chosen_enemy_index = int(input("Sorry, invalid input! "
+                                                                       "Please enter the index of the "
+                                                                       "enemy you want to attack (1 - " +
+                                                                       str(len(curr_battle.
+                                                                               team2.get_legendary_creatures())) +
+                                                                       "): "))
+
+                                    chosen_enemy_target: LegendaryCreature = curr_battle.team2. \
+                                        get_legendary_creatures()[chosen_enemy_index - 1]
+                                    curr_battle.whose_turn.have_turn(chosen_enemy_target, None, trainer_battle_action)
+                                    if random.random() < chosen_enemy_target.counterattack_chance + \
+                                            chosen_enemy_target.counterattack_chance_up:
+                                        chosen_enemy_target.counterattack(curr_battle.whose_turn)
+
+                                elif trainer_battle_action == "NORMAL HEAL":
+                                    # Asking the user to select who to heal
+                                    print("Below is a list of allies you can heal.")
+                                    ally_index: int = 1  # initial value
+                                    for ally in curr_battle.team1.get_legendary_creatures():
+                                        print("ALLY #" + str(ally_index))
+                                        print(str(ally) + "\n")
+                                        ally_index += 1
+
+                                    chosen_ally_index: int = int(input("Please enter the index of the "
+                                                                       "ally you want to heal (1 - " +
+                                                                       str(len(curr_battle.
+                                                                               team1.get_legendary_creatures())) +
+                                                                       "): "))
+                                    while chosen_ally_index < 1 or chosen_ally_index > len(curr_battle.
+                                                                                                   team1.get_legendary_creatures()):
+                                        chosen_ally_index = int(input("Sorry, invalid input! "
+                                                                      "Please enter the index of the "
+                                                                      "ally you want to heal (1 - " +
+                                                                      str(len(curr_battle.
+                                                                              team1.get_legendary_creatures())) +
+                                                                      "): "))
+
+                                    chosen_ally_target: LegendaryCreature = curr_battle.team1. \
+                                        get_legendary_creatures()[chosen_ally_index - 1]
+                                    curr_battle.whose_turn.have_turn(chosen_ally_target, None,
+                                                                     trainer_battle_action)
+                                else:
+                                    pass
+
+                                # Checking the case where the moving legendary creature gets an extra turn
+                                if random.random() < moving_legendary_creature.extra_turn_chance + \
+                                    moving_legendary_creature.extra_turn_chance_up and \
+                                        moving_legendary_creature.can_move:
+                                    curr_battle.whose_turn = moving_legendary_creature
+
+                                    # Recovering magic points
+                                    curr_battle.whose_turn.recover_magic_points()
+                                else:
+                                    curr_battle.get_someone_to_move()
+
+                            elif curr_battle.whose_turn in curr_battle.team2.get_legendary_creatures():
+                                curr_moving_legendary_creature: LegendaryCreature = curr_battle.whose_turn
+                                chance: float = random.random()
+                                trainer_battle_action: str = "NORMAL ATTACK" if chance <= 1 / 3 else \
+                                    "NORMAL HEAL" if 1 / 3 < chance <= 2 / 3 else "USE SKILL"
+                                usable_skills: list = [skill for skill in curr_battle.whose_turn.get_skills()
+                                                       if curr_battle.whose_turn.curr_magic_points >=
+                                                       skill.magic_points_cost and isinstance(skill, ActiveSkill)]
+
+                                # If there are no usable skills and 'trainer_battle_action' is set to "USE SKILL",
+                                # change the value of 'trainer_battle_action'
+                                if len(usable_skills) == 0:
+                                    trainer_battle_action = "NORMAL ATTACK" if random.random() < 0.5 else "NORMAL HEAL"
+
+                                if trainer_battle_action == "NORMAL ATTACK":
+                                    # A normal attack occurs
+                                    moving_legendary_creature: LegendaryCreature = curr_battle.whose_turn
+                                    target: LegendaryCreature = curr_battle.team1.get_legendary_creatures() \
+                                        [random.randint(0, len(curr_battle.team1.get_legendary_creatures()) - 1)]
+                                    moving_legendary_creature.have_turn(target, None, trainer_battle_action)
+                                    if random.random() < target.counterattack_chance + \
+                                            target.counterattack_chance_up:
+                                        target.counterattack(moving_legendary_creature)
+                                elif trainer_battle_action == "NORMAL HEAL":
+                                    # A normal heal occurs
+                                    moving_legendary_creature: LegendaryCreature = curr_battle.whose_turn
+                                    target: LegendaryCreature = curr_battle.team2.get_legendary_creatures() \
+                                        [random.randint(0, len(curr_battle.team2.get_legendary_creatures()) - 1)]
+                                    moving_legendary_creature.have_turn(target, None, trainer_battle_action)
+                                elif trainer_battle_action == "USE SKILL":
+                                    # A skill is used
+                                    moving_legendary_creature: LegendaryCreature = curr_battle.whose_turn
+                                    skill_to_use: ActiveSkill = usable_skills[random.randint(0, len(usable_skills) - 1)]
+                                    if skill_to_use.active_skill_type == "ATTACK" or \
+                                            skill_to_use.active_skill_type == "ENEMIES EFFECT":
+                                        target: LegendaryCreature = curr_battle.team1.get_legendary_creatures() \
+                                            [random.randint(0, len(curr_battle.team1.get_legendary_creatures()) - 1)]
+                                        moving_legendary_creature.have_turn(target, skill_to_use, trainer_battle_action)
+                                        if skill_to_use.active_skill_type == "ATTACK":
+                                            if random.random() < target.counterattack_chance + \
+                                                    target.counterattack_chance_up:
+                                                target.counterattack(moving_legendary_creature)
+                                    else:
+                                        target: LegendaryCreature = curr_battle.team2.get_legendary_creatures() \
+                                            [random.randint(0, len(curr_battle.team2.get_legendary_creatures()) - 1)]
+                                        moving_legendary_creature.have_turn(target, skill_to_use, trainer_battle_action)
+                                else:
+                                    pass
+
+                                # Checking the case where the moving legendary creature gets an extra turn
+                                if random.random() < curr_moving_legendary_creature.extra_turn_chance + \
+                                        curr_moving_legendary_creature.extra_turn_chance_up and \
+                                        curr_moving_legendary_creature.can_move:
+                                    curr_battle.whose_turn = curr_moving_legendary_creature
+
+                                    # Recovering magic points
+                                    curr_battle.whose_turn.recover_magic_points()
+                                else:
+                                    curr_battle.get_someone_to_move()
+
+                            # Recovering magic points
+                            curr_battle.whose_turn.recover_magic_points()
+
+                        if curr_battle.winner == curr_battle.team1:
+                            print("Congratulations! You won the battle!")
+                            new_game.player_data.claim_reward(curr_battle.reward)
+                            current_stage.is_cleared = True
+
+                            # Checking whether the next stage is None or not. If yes, the player has cleared the level
+                            if chosen_level.next_stage(curr_stage_number) is None:
+                                new_game.player_data.claim_reward(chosen_level.clear_reward)
+                                chosen_level.is_cleared = True
+                            else:
+                                # Move on to the next stage
+                                current_stage = chosen_level.next_stage(curr_stage_number)
+                                curr_stage_number += 1
+                        elif curr_battle.winner == curr_battle.team2:
+                            print("You lost the battle! Please come back stronger!")
+
+                        # Restore all legendary creatures
+                        curr_battle.team1.recover_all()
+                        curr_battle.team2.recover_all()
+
+                elif sub_action == "DUNGEON":
+                    # Clearing up the command line window
+                    clear()
+
+                    # Getting a list of dungeons for the player to choose from
+                    dungeons: list = [battle_area for battle_area in new_game.get_battle_areas() if
+                                      isinstance(battle_arena, Dungeon)]
+
+                elif sub_action == "BATTLE ARENA":
+                    # Clearing up the command line window
+                    clear()
+
+                    # Showing a list of CPU players the player can battle against in the arena.
+                    cpu_index: int = 1
+                    for opponent in new_game.battle_arena.get_potential_opponents():
+                        print("OPPONENT NUMBER #" + str(cpu_index))
+                        print(str(opponent) + "\n")
+                        cpu_index += 1
+
+                else:
+                    pass
+
             else:
                 pass
 
