@@ -1506,6 +1506,7 @@ class Rune(Item):
         self.level: int = 1
         self.level_up_gold_cost: mpf = gold_cost
         self.level_up_success_rate: mpf = mpf("1")
+        self.already_placed: bool = False  # initial value
 
     def __str__(self):
         return '%s(%s)' % (
@@ -2335,7 +2336,10 @@ class LegendaryCreature:
         return self.__runes
 
     def place_rune(self, rune):
-        # type: (Rune) -> None
+        # type: (Rune) -> bool
+        if rune.already_placed:
+            return False
+
         if rune.slot_number in self.__runes.keys():
             self.remove_rune(rune.slot_number)
 
@@ -2401,6 +2405,8 @@ class LegendaryCreature:
                         count += 1
 
         self.restore()
+        rune.already_placed = True
+        return True
 
     def level_up(self):
         # type: () -> None
@@ -2509,6 +2515,8 @@ class LegendaryCreature:
                             count += 1
 
             self.restore()
+            self.__runes.pop(current_rune.slot_number)
+            current_rune.already_placed = False
             return True
         return False
 
@@ -3045,7 +3053,8 @@ class Island:
             new = []  # initial value
             for k in range(self.ISLAND_HEIGHT):
                 # Ensuring that obstacles are not placed at the edges of the island
-                if random.random() <= 0.3 and not self.is_edge(i, k):
+                place_obstacle: bool = random.random() <= 0.3
+                if place_obstacle and not self.is_edge(i, k):
                     new.append(IslandTile(Obstacle()))
                 else:
                     new.append(IslandTile())
@@ -4222,8 +4231,11 @@ def main():
                 # inventory.
                 if len(new_game.player_data.legendary_creature_inventory.get_legendary_creatures()) > 0:
                     print("Below is a list of legendary creatures you have.\n")
+                    curr_legendary_creature_index: int = 1  # initial value
                     for legendary_creature in new_game.player_data.legendary_creature_inventory.get_legendary_creatures():
+                        print("LEGENDARY CREATURE #" + str(curr_legendary_creature_index))
                         print(str(legendary_creature) + "\n")
+                        curr_legendary_creature_index += 1
 
                     legendary_creature_index: int = int(input("Please enter the index of the legendary creature "
                                                               "you want to remove a rune from (1 - " +
@@ -4240,6 +4252,9 @@ def main():
                     chosen_legendary_creature: LegendaryCreature = \
                         new_game.player_data.legendary_creature_inventory.get_legendary_creatures() \
                             [legendary_creature_index - 1]
+                    print(str(chosen_legendary_creature.name) + " has runes placed in slots as below.")
+                    for i in chosen_legendary_creature.get_runes().keys():
+                        print("SLOT NUMBER #" + str(i))
 
                     slot_number: int = int(input("Please enter the slot number of the rune you want to remove "
                                                  "(1 - 6): "))
@@ -4258,8 +4273,11 @@ def main():
                 # inventory.
                 if len(new_game.player_data.legendary_creature_inventory.get_legendary_creatures()) > 0:
                     print("Below is a list of legendary creatures you have.\n")
+                    curr_legendary_creature_index: int = 1  # initial value
                     for legendary_creature in new_game.player_data.legendary_creature_inventory.get_legendary_creatures():
+                        print("LEGENDARY CREATURE #" + str(curr_legendary_creature_index))
                         print(str(legendary_creature) + "\n")
+                        curr_legendary_creature_index += 1
 
                     legendary_creature_index: int = int(input("Please enter the index of the legendary creature "
                                                               "you want to place a rune on (1 - " +
@@ -4277,10 +4295,12 @@ def main():
                         new_game.player_data.legendary_creature_inventory.get_legendary_creatures() \
                             [legendary_creature_index - 1]
 
+                    # Getting a list of runes which can be placed to the legendary creature
                     runes: list = []  # initial value
                     for item in new_game.player_data.item_inventory.get_items():
                         if isinstance(item, Rune):
-                            runes.append(item)
+                            if not item.already_placed:
+                                runes.append(item)
 
                     print("Enter 'Y' for yes.")
                     print("Enter anything else for no.")
@@ -4289,8 +4309,11 @@ def main():
                     if place_rune == "Y":
                         if len(runes) > 0:
                             print("Below is a list of runes you have.\n")
+                            curr_rune_index: int = 1  # initial value
                             for rune in runes:
+                                print("RUNE #" + str(curr_rune_index))
                                 print(str(rune) + "\n")
+                                curr_rune_index += 1
 
                             rune_index: int = int(input("Please enter the index of the rune you want to place to "
                                                         "this legendary creature (1 - " + str(len(runes)) + "): "))
@@ -4318,8 +4341,11 @@ def main():
                 # If there are training areas, ask the player which training area he/she wants to manage.
                 if len(training_areas) > 0:
                     print("Below is a list of training areas that you have.")
+                    curr_training_area_index: int = 1  # initial value
                     for training_area in training_areas:
+                        print("TRAINING AREA #" + str(curr_training_area_index))
                         print(str(training_area) + "\n")
+                        curr_training_area_index += 1
 
                     training_area_index: int = int(input("Please enter the index of the training area you want to "
                                                          "manage (1 - " + str(len(training_areas)) + "): "))
@@ -4375,8 +4401,11 @@ def main():
                                                                "training area? ")
                         if remove_legendary_creature == "Y":
                             # Printing a list of legendary creatures in the chosen training area
+                            curr_legendary_creature_index: int = 1
                             for legendary_creature in chosen_training_area.get_legendary_creatures_placed():
+                                print("LEGENDARY CREATURE #" + str(curr_legendary_creature_index))
                                 print(str(legendary_creature) + "\n")
+                                curr_legendary_creature_index += 1
 
                             legendary_creature_index: int = int(input("Please enter the index of the legendary "
                                                                       "creature "
@@ -4413,8 +4442,11 @@ def main():
                 # If there are power up circles, ask the player which power-up circle he/she wants to use
                 if len(power_up_circles) > 0:
                     print("Below is a list of power up circles that you have.")
+                    curr_power_up_circle_index: int = 1  # initial value
                     for power_up_circle in power_up_circles:
+                        print("POWER UP CIRCLE #" + str(curr_power_up_circle_index))
                         print(str(power_up_circle) + "\n")
+                        curr_power_up_circle_index += 1
 
                     power_up_circle_index: int = int(input("Please enter the index of the power-up circle you want to "
                                                            "use (1 - " + str(len(power_up_circles)) + "): "))
@@ -4474,8 +4506,11 @@ def main():
                         legendary_creature_options.remove(to_be_evolved)
                         for i in range(num_materials):
                             print("Below is a list of legendary creatures you can choose as a material.\n")
+                            curr_legendary_creature_index: int = 1  # initial value
                             for legendary_creature in legendary_creature_options:
+                                print("LEGENDARY CREATURE #" + str(curr_legendary_creature_index))
                                 print(str(legendary_creature) + "\n")
+                                curr_legendary_creature_index += 1
 
                             chosen_legendary_creature_index: int = int(input("Please enter the index of the legendary "
                                                                              "creature you want to use as a material "
@@ -4515,8 +4550,11 @@ def main():
                 # If there are power up circles, ask the player which power-up circle he/she wants to use
                 if len(power_up_circles) > 0:
                     print("Below is a list of power up circles that you have.")
+                    curr_power_up_circle_index: int = 1  # initial value
                     for power_up_circle in power_up_circles:
+                        print("POWER UP CIRCLE #" + str(curr_power_up_circle_index))
                         print(str(power_up_circle) + "\n")
+                        curr_power_up_circle_index += 1
 
                     power_up_circle_index: int = int(input("Please enter the index of the power-up circle you want to "
                                                            "use (1 - " + str(len(power_up_circles)) + "): "))
@@ -4531,9 +4569,12 @@ def main():
                     # possible
                     if len(new_game.player_data.legendary_creature_inventory.get_legendary_creatures()) > 0:
                         # Printing all the legendary creatures the player has.
+                        curr_legendary_creature_index: int = 1  # initial value
                         for legendary_creature in \
                                 new_game.player_data.legendary_creature_inventory.get_legendary_creatures():
+                            print("LEGENDARY CREATURE #" + str(curr_legendary_creature_index))
                             print(str(legendary_creature) + "\n")
+                            curr_legendary_creature_index += 1
 
                         # Ask the player to choose the legendary creature to be powered up
                         to_be_powered_up_index: int = int(input("Please enter the index of the legendary creature "
@@ -4576,8 +4617,11 @@ def main():
                         legendary_creature_options.remove(to_be_powered_up)
                         for i in range(num_materials):
                             print("Below is a list of legendary creatures you can choose as a material.\n")
+                            curr_legendary_creature_index: int = 1  # initial value
                             for legendary_creature in legendary_creature_options:
+                                print("LEGENDARY CREATURE #" + str(curr_legendary_creature_index))
                                 print(str(legendary_creature) + "\n")
+                                curr_legendary_creature_index += 1
 
                             chosen_legendary_creature_index: int = int(input("Please enter the index of the legendary "
                                                                              "creature you want to use as a material "
@@ -4614,8 +4658,11 @@ def main():
                 if len(non_rune_items) > 0 and \
                         len(new_game.player_data.legendary_creature_inventory.get_legendary_creatures()) > 0:
                     print("Below is a list of non-rune items that you have.\n")
+                    curr_item_index: int = 1  # initial value
                     for item in non_rune_items:
+                        print("ITEM #" + str(curr_item_index))
                         print(str(item) + "\n")
+                        curr_item_index += 1
 
                     item_index: int = int(input("Please enter the index of the item you want to give (1 - " +
                                                 str(len(non_rune_items)) + "): "))
@@ -4626,9 +4673,12 @@ def main():
 
                     item_to_give: Item = non_rune_items[item_index - 1]
                     print("Below is a list of legendary creatures you have.\n")
+                    curr_legendary_creature_index: int = 1  # initial value
                     for legendary_creature in new_game.player_data.legendary_creature_inventory. \
                             get_legendary_creatures():
+                        print("LEGENDARY CREATURE #" + str(curr_legendary_creature_index))
                         print(str(legendary_creature) + "\n")
+                        curr_legendary_creature_index += 1
 
                     legendary_creature_index: int = int(input("Please enter the index of the legendary creature you "
                                                               "want to give the item to (1 - " +
@@ -4676,11 +4726,11 @@ def main():
                 # If there are summonhenges and scrolls, ask the player which summonhenge and scroll he/she wants to use
                 if len(summonhenges) > 0 and len(scrolls) > 0:
                     print("Below is a list of summonhenges that you have.")
-                    curr_scroll_index: int = 1  # initial value
+                    curr_summonhenge_index: int = 1  # initial value
                     for summonhenge in summonhenges:
-                        print("SCROLL #"  + str(curr_scroll_index))
+                        print("SUMMONHENGE #" + str(curr_summonhenge_index))
                         print(str(summonhenge) + "\n")
-                        curr_scroll_index += 1
+                        curr_summonhenge_index += 1
 
                     summonhenge_index: int = int(input("Please enter the index of the summonhenge you want to "
                                                        "use (1 - " + str(len(summonhenges)) + "): "))
@@ -4691,8 +4741,11 @@ def main():
 
                     chosen_summonhenge: Summonhenge = summonhenges[summonhenge_index - 1]
                     print("Below is a list of scrolls that you have.")
+                    curr_scroll_index: int = 1  # initial value
                     for scroll in scrolls:
+                        print("SCROLL #" + str(curr_scroll_index))
                         print(str(scroll) + "\n")
+                        curr_scroll_index += 1
 
                     scroll_index: int = int(input("Please enter the index of the scroll you want to use "
                                                   "(1 - " + str(len(scrolls)) + "): "))
@@ -4727,8 +4780,11 @@ def main():
                 # fusion center to use.
                 if len(fusion_centers) > 0 and len(potential_material_legendary_creatures) > 0:
                     print("Below is a list of fusion centers that you have.")
+                    curr_fusion_center_index: int = 1  # initial value
                     for fusion_center in fusion_centers:
+                        print("FUSION CENTER #" + str(curr_fusion_center_index))
                         print(str(fusion_center) + "\n")
+                        curr_fusion_center_index += 1
 
                     fusion_center_index: int = int(input("Please enter the index of the fusion center you want "
                                                          "to use (1 - " + str(len(fusion_centers)) + "): "))
@@ -4739,8 +4795,11 @@ def main():
                     chosen_fusion_center: FusionCenter = fusion_centers[fusion_center_index - 1]
 
                     print("Below is a list of legendary creatures you can fuse to.")
+                    curr_fusion_legendary_creature_index: int = 1  # initial value
                     for fusion_legendary_creature in chosen_fusion_center.get_fusion_legendary_creatures():
+                        print("FUSION CENTER #" + str(curr_fusion_legendary_creature_index))
                         print(str(fusion_legendary_creature) + "\n")
+                        curr_fusion_legendary_creature_index += 1
 
                     fusion_legendary_creature_index: int = int(input("Please enter the index of the fusion legendary "
                                                                      "creature you want to fuse to (1 - "
@@ -4770,8 +4829,11 @@ def main():
                                                    str(min(5, len(potential_material_legendary_creatures))) + "): "))
                     for i in range(num_materials):
                         print("Below is a list of legendary creatures which you can use as the materials.")
+                        curr_material_index: int = 1
                         for material_legendary_creature in potential_material_legendary_creatures:
+                            print("MATERIAL LEGENDARY CREATURE #" + str(curr_material_index))
                             print(str(material_legendary_creature) + "\n")
+                            curr_material_index += 1
 
                         material_index: int = int(input("Please enter the index of the material legendary creature "
                                                         "you want to select (1 - " +
@@ -4813,8 +4875,11 @@ def main():
                 # If there are temples of wishes, ask the player to choose which temple of wishes he/she wants to use
                 if len(temples_of_wishes) > 0:
                     print("Below is a list of temples of wishes you can use.")
+                    curr_temple_of_wishes_index: int = 1  # initial value
                     for temple_of_wishes in temples_of_wishes:
+                        print("TEMPLE OF WISHES #" + str(curr_temple_of_wishes_index))
                         print(str(temple_of_wishes) + "\n")
+                        curr_temple_of_wishes_index += 1
 
                     temple_of_wishes_index: int = int(input("Please enter the index of the temple of wishes "
                                                             "you want to use (1 - " +
@@ -4833,8 +4898,11 @@ def main():
                 clear()
                 if len(new_game.player_data.item_inventory.get_items()) > 0:
                     print("Below is a list of items in your item inventory.\n")
+                    curr_item_index: int = 1
                     for item in new_game.player_data.item_inventory.get_items():
+                        print("ITEM #" + str(curr_item_index))
                         print(str(item) + "\n")
+                        curr_item_index += 1
 
                     item_index: int = int(input("Please enter the index of the item you want to sell (1 - " +
                                                 str(len(new_game.player_data.item_inventory.get_items())) + "): "))
@@ -4854,8 +4922,11 @@ def main():
                     # Ask the player which rune to level up if there are runes in the item inventory
                     if len(runes) > 0:
                         print("Below is a list of runes you have.\n")
+                        curr_rune_index: int = 1  # initial value
                         for rune in runes:
+                            print("RUNE #" + str(curr_rune_index))
                             print(str(rune) + "\n")
+                            curr_rune_index += 1
 
                         rune_index: int = int(input("Please enter the index of the rune you want to level "
                                                     "up (1 - " + str(len(runes)) + "): "))
@@ -4872,9 +4943,12 @@ def main():
                 clear()
                 if len(new_game.player_data.legendary_creature_inventory.get_legendary_creatures()) > 0:
                     print("Below is a list of legendary creatures in your legendary creature inventory.\n")
+                    curr_legendary_creature_index: int = 1  # initial value
                     for legendary_creature in new_game.player_data.legendary_creature_inventory. \
                             get_legendary_creatures():
+                        print("LEGENDARY CREATURE #" + str(curr_legendary_creature_index))
                         print(str(legendary_creature) + "\n")
+                        curr_legendary_creature_index += 1
 
                     legendary_creature_index: int = int(input("Please enter the index of the legendary creature "
                                                               "you want to remove (1 - " +
@@ -4900,8 +4974,11 @@ def main():
                 clear()
                 if len(new_game.player_data.battle_team.get_legendary_creatures()) > 0:
                     print("Below is a list of legendary creatures in your battle team.\n")
+                    current_legendary_creature_index: int = 1  # initial value
                     for legendary_creature in new_game.player_data.battle_team.get_legendary_creatures():
+                        print("LEGENDARY CREATURE #" + str(current_legendary_creature_index))
                         print(str(legendary_creature) + "\n")
+                        current_legendary_creature_index += 1
 
                     print("Enter 'Y' for yes.")
                     print("Enter anything else for no.")
@@ -4930,8 +5007,11 @@ def main():
 
                 if len(new_game.player_data.battle_team.get_legendary_creatures()) < Team.MAX_LEGENDARY_CREATURES:
                     print("Below is a list of legendary creatures you have.\n")
+                    current_legendary_creature_index: int = 1  # initial value
                     for legendary_creature in new_game.player_data.legendary_creature_inventory.get_legendary_creatures():
+                        print("LEGENDARY CREATURE #" + str(current_legendary_creature_index))
                         print(str(legendary_creature) + "\n")
+                        current_legendary_creature_index += 1
 
                     print("Enter 'Y' for yes.")
                     print("Enter anything else for no.")
