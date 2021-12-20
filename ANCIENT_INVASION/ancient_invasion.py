@@ -832,6 +832,8 @@ class Player:
             scroll.get_potential_legendary_creatures()[summoned_legendary_creature_index]
         print("You have summoned " + str(summoned_legendary_creature.name) + "!!!")
         self.add_legendary_creature(summoned_legendary_creature)
+        self.remove_item_from_inventory(scroll)
+        return True
 
     def give_item_to_legendary_creature(self, item, legendary_creature):
         # type: (Item, LegendaryCreature) -> bool
@@ -3042,12 +3044,18 @@ class Island:
         for i in range(self.ISLAND_WIDTH):
             new = []  # initial value
             for k in range(self.ISLAND_HEIGHT):
-                if random.random() <= 0.3:
+                # Ensuring that obstacles are not placed at the edges of the island
+                if random.random() <= 0.3 and not self.is_edge(i, k):
                     new.append(IslandTile(Obstacle()))
                 else:
                     new.append(IslandTile())
 
             self.__tiles.append(new)
+
+    def is_edge(self, x, y):
+        # type: (int, int) -> bool
+        return (x == 0 and y == 0) or (x == 0 and y == self.ISLAND_HEIGHT - 1) or \
+               (x == self.ISLAND_WIDTH - 1 and y == 0) or (x == self.ISLAND_WIDTH - 1 and y == self.ISLAND_HEIGHT - 1)
 
     def get_tiles(self):
         # type: () -> list
@@ -4189,8 +4197,11 @@ def main():
 
                 # Show a list of items which the player can buy
                 item_list: list = new_game.item_shop.get_items_sold()
+                curr_item_index: int = 1  # initial value
                 for item in item_list:
+                    print("ITEM #" + str(curr_item_index))
                     print(str(item) + "\n")
+                    curr_item_index += 1
 
                 item_index: int = int(input("Please enter the index of the item you want to buy (1 - " +
                                             str(len(item_list)) + "): "))
@@ -4665,8 +4676,11 @@ def main():
                 # If there are summonhenges and scrolls, ask the player which summonhenge and scroll he/she wants to use
                 if len(summonhenges) > 0 and len(scrolls) > 0:
                     print("Below is a list of summonhenges that you have.")
+                    curr_scroll_index: int = 1  # initial value
                     for summonhenge in summonhenges:
+                        print("SCROLL #"  + str(curr_scroll_index))
                         print(str(summonhenge) + "\n")
+                        curr_scroll_index += 1
 
                     summonhenge_index: int = int(input("Please enter the index of the summonhenge you want to "
                                                        "use (1 - " + str(len(summonhenges)) + "): "))
@@ -4769,7 +4783,7 @@ def main():
                                                        str(len(potential_material_legendary_creatures)) + "): "))
 
                         chosen_material_legendary_creature: LegendaryCreature = potential_material_legendary_creatures \
-                            [material_index]
+                            [material_index - 1]
                         if chosen_material_legendary_creature.name not in [legendary_creature.name for
                                                                            legendary_creature in
                                                                            chosen_fusion_legendary_creature.
@@ -4988,7 +5002,7 @@ def main():
                     if sub_action == "LEVEL UP BUILDING":
                         tile_x: int = int(input("Please enter x-coordinates of the building to be levelled up: "))
                         tile_y: int = int(input("Please enter y-coordinates of the building to be levelled up: "))
-                        if new_game.player_data.level_up_building_at_island_tile(chosen_island_index, tile_x, tile_y):
+                        if new_game.player_data.level_up_building_at_island_tile(chosen_island_index - 1, tile_x, tile_y):
                             print("You have successfully levelled up " +
                                   str(chosen_island.get_tile_at(tile_x, tile_y).building.name) + "!")
                         else:
@@ -4997,33 +5011,38 @@ def main():
                         tile_x: int = int(input("Please enter x-coordinates of the tile to build at: "))
                         tile_y: int = int(input("Please enter y-coordinates of the tile to build at: "))
                         if isinstance(chosen_island.get_tile_at(tile_x, tile_y), IslandTile):
-                            print("Below is a list of buildings you can build on the tile.")
-                            building_count: int = 1
-                            for building in building_shop.get_buildings_sold():
-                                print("BUILDING #" + str(building_count))
-                                print(str(building) + "\n")
-                                building_count += 1
+                            curr_tile: IslandTile = chosen_island.get_tile_at(tile_x, tile_y)
+                            if curr_tile.building is None:
+                                print("Below is a list of buildings you can build on the tile.")
+                                building_count: int = 1
+                                for building in building_shop.get_buildings_sold():
+                                    print("BUILDING #" + str(building_count))
+                                    print(str(building) + "\n")
+                                    building_count += 1
 
-                            building_index: int = int(input("Please enter the index of the building you "
-                                                            "want to build (1 - " +
-                                                            str(len(building_shop.get_buildings_sold()))))
-                            while building_index < 1 or building_index > len(building_shop.get_buildings_sold()):
-                                building_index = int(input("Sorry, invalid input! Please enter the index of "
-                                                           "the building you "
-                                                           "want to build (1 - " +
-                                                           str(len(building_shop.get_buildings_sold()))))
+                                building_index: int = int(input("Please enter the index of the building you "
+                                                                "want to build (1 - " +
+                                                                str(len(building_shop.get_buildings_sold())) + "): "))
+                                while building_index < 1 or building_index > len(building_shop.get_buildings_sold()):
+                                    building_index = int(input("Sorry, invalid input! Please enter the index of "
+                                                               "the building you "
+                                                               "want to build (1 - " +
+                                                               str(len(building_shop.get_buildings_sold())) + "): "))
 
-                            to_build: Building = building_shop.get_buildings_sold()[building_index - 1]
-                            if new_game.player_data.build_at_island_tile(chosen_island_index, tile_x, tile_y, to_build):
-                                print("You have successfully built " + str(to_build.name) + "!")
+                                to_build: Building = building_shop.get_buildings_sold()[building_index - 1]
+                                if new_game.player_data.build_at_island_tile(chosen_island_index - 1, tile_x, tile_y,
+                                                                             to_build):
+                                    print("You have successfully built " + str(to_build.name) + "!")
+                                else:
+                                    print("Sorry, you cannot build " + str(to_build.name) + "!")
                             else:
-                                print("Sorry, you cannot build " + str(to_build.name) + "!")
+                                print("Sorry, you cannot build here!")
                         else:
                             print("Sorry, you cannot build here!")
                     elif sub_action == "REMOVE BUILDING":
                         tile_x: int = int(input("Please enter x-coordinates of the tile to remove building from: "))
                         tile_y: int = int(input("Please enter y-coordinates of the tile to remove building from: "))
-                        if new_game.player_data.remove_building_from_island_tile(chosen_island_index, tile_x, tile_y):
+                        if new_game.player_data.remove_building_from_island_tile(chosen_island_index - 1, tile_x, tile_y):
                             print("You have successfully removed a building!")
                         else:
                             print("You failed to remove a building!")
