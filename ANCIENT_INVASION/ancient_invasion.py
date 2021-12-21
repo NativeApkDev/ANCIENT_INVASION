@@ -1275,6 +1275,10 @@ class Player:
     def sell_item(self, item):
         # type: (Item) -> bool
         if item in self.item_inventory.get_items():
+            if isinstance(item, Rune):
+                if item.already_placed:
+                    return False
+
             self.remove_item_from_inventory(item)
             self.gold += item.sell_gold_gain
             self.gems += item.sell_gem_gain
@@ -1292,28 +1296,18 @@ class Player:
     def level_up_rune(self, rune):
         # type: (Rune) -> bool
         if rune in self.item_inventory.get_items():
-            if self.gold >= rune.level_up_coin_cost:
-                self.gold -= rune.level_up_coin_cost
-                rune.level_up()
-                return True
+            if self.gold >= rune.level_up_gold_cost:
+                self.gold -= rune.level_up_gold_cost
+                return rune.level_up()
+            return False
         else:
             # Check whether a legendary creature has the rune 'rune' or not
             for legendary_creature in self.legendary_creature_inventory.get_legendary_creatures():
                 if rune in legendary_creature.get_runes().values():
                     if self.gold >= rune.level_up_gold_cost:
                         self.gold -= rune.level_up_gold_cost
-                        legendary_creature.level_up_rune(rune.slot_number)
-                        return True
+                        return legendary_creature.level_up_rune(rune.slot_number)
                     return False
-
-            for legendary_creature in self.battle_team.get_legendary_creatures():
-                if rune in legendary_creature.get_runes().values():
-                    if self.gold >= rune.level_up_gold_cost:
-                        self.gold -= rune.level_up_gold_cost
-                        legendary_creature.level_up_rune(rune.slot_number)
-                        return True
-                    return False
-
             return False
 
     def add_item_to_inventory(self, item):
@@ -1585,7 +1579,7 @@ class Rune(Item):
     def level_up(self):
         # type: () -> bool
         # Check whether levelling up is successful or not
-        if random.random() < self.level_up_success_rate:
+        if random.random() > self.level_up_success_rate:
             return False
 
         # Increase the level of the rune
@@ -2434,8 +2428,9 @@ class LegendaryCreature:
 
         current_rune: Rune = self.__runes[slot_number]
         self.remove_rune(slot_number)
-        current_rune.level_up()
+        success: bool = current_rune.level_up()
         self.place_rune(current_rune)
+        return success
 
     def remove_rune(self, slot_number):
         # type: (int) -> bool
@@ -4222,7 +4217,7 @@ def main():
                 if new_game.player_data.purchase_item(item_to_buy):
                     print("You have successfully bought " + str(item_to_buy.name))
                 else:
-                    print("Sorry, you have insufficient coins and/or gems!")
+                    print("Sorry, you have insufficient gold and/or gems!")
             elif action == "REMOVE RUNE":
                 # Clearing up the command line window
                 clear()
@@ -4904,15 +4899,23 @@ def main():
                         print(str(item) + "\n")
                         curr_item_index += 1
 
-                    item_index: int = int(input("Please enter the index of the item you want to sell (1 - " +
-                                                str(len(new_game.player_data.item_inventory.get_items())) + "): "))
-                    while item_index < 1 or item_index > len(new_game.player_data.item_inventory.get_items()):
-                        item_index = int(input("Sorry, invalid input! Please enter the index of the item you "
-                                               "want to sell (1 - " +
-                                               str(len(new_game.player_data.item_inventory.get_items())) + "): "))
+                    print("Enter 'Y' for yes.")
+                    print("Enter anything else for no.")
+                    sell_item: str = input("Do you want to sell an item? ")
+                    if sell_item == "Y":
+                        item_index: int = int(input("Please enter the index of the item you want to sell (1 - " +
+                                                    str(len(new_game.player_data.item_inventory.get_items())) + "): "))
+                        while item_index < 1 or item_index > len(new_game.player_data.item_inventory.get_items()):
+                            item_index = int(input("Sorry, invalid input! Please enter the index of the item you "
+                                                   "want to sell (1 - " +
+                                                   str(len(new_game.player_data.item_inventory.get_items())) + "): "))
 
-                    to_be_sold: Item = new_game.player_data.item_inventory.get_items()[item_index - 1]
-                    new_game.player_data.sell_item(to_be_sold)
+                        to_be_sold: Item = new_game.player_data.item_inventory.get_items()[item_index - 1]
+                        if new_game.player_data.sell_item(to_be_sold):
+                            print("Congratulations! You have earned " + str(to_be_sold.sell_gold_gain) + " gold and " +
+                                  str(to_be_sold.sell_gem_gain) + " gems for selling " + str(to_be_sold.name) + "!")
+                        else:
+                            print("Sorry! " + str(to_be_sold.name) + " cannot be sold!")
 
                     runes: list = []  # initial value
                     for item in new_game.player_data.item_inventory.get_items():
@@ -4928,15 +4931,19 @@ def main():
                             print(str(rune) + "\n")
                             curr_rune_index += 1
 
-                        rune_index: int = int(input("Please enter the index of the rune you want to level "
-                                                    "up (1 - " + str(len(runes)) + "): "))
-                        while rune_index < 1 or rune_index > len(runes):
-                            rune_index = int(input("Sorry, invalid input! Please enter the index of the rune you "
-                                                   "want to level "
-                                                   "up (1 - " + str(len(runes)) + "): "))
+                        print("Enter 'Y' for yes.")
+                        print("Enter anything else for no.")
+                        level_up_rune: str = input("Do you want to level up a rune? ")
+                        if level_up_rune == "Y":
+                            rune_index: int = int(input("Please enter the index of the rune you want to level "
+                                                        "up (1 - " + str(len(runes)) + "): "))
+                            while rune_index < 1 or rune_index > len(runes):
+                                rune_index = int(input("Sorry, invalid input! Please enter the index of the rune you "
+                                                       "want to level "
+                                                       "up (1 - " + str(len(runes)) + "): "))
 
-                        chosen_rune: Rune = runes[rune_index - 1]
-                        new_game.player_data.level_up_rune(chosen_rune)
+                            chosen_rune: Rune = runes[rune_index - 1]
+                            new_game.player_data.level_up_rune(chosen_rune)
 
             elif action == "MANAGE LEGENDARY CREATURE INVENTORY":
                 # Clearing up the command line window
@@ -5036,7 +5043,7 @@ def main():
                         to_be_added: LegendaryCreature = \
                             new_game.player_data.legendary_creature_inventory.get_legendary_creatures() \
                                 [legendary_creature_index - 1]
-                        new_game.player_data.legendary_creature_inventory.add_legendary_creature(to_be_added)
+                        new_game.player_data.battle_team.add_legendary_creature(to_be_added)
 
             elif action == "MANAGE PLAYER BASE":
                 # Clearing up the command line window
