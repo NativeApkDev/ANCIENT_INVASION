@@ -59,31 +59,31 @@ do can be chosen by entering an input as instructed in the command line interfac
 
 In the game, you will be able to do any of the actions as shown in "Image 4". The actions are described as below.
 
-* PLAY ADVENTURE MODE -> battle in levels inside either map areas or dungeons against enemy legendary creatures. Each 
+* <b>PLAY ADVENTURE MODE</b> -> battle in levels inside either map areas or dungeons against enemy legendary creatures. Each 
 level has multiple stages where each stage has a number of enemies you will need to defeat in order to proceed and
 eventually clear the levels and gain rewards.
-* MANAGE PLAYER BASE -> build, level up, and remove buildings on your player base. Trees can be built for decorations;
+* <b>MANAGE PLAYER BASE</b> -> build, level up, and remove buildings on your player base. Trees can be built for decorations;
 obstacles can be removed; and buildings to strengthen legendary creatures (e.g., magic altar), produce resources
 (e.g., gold mine and gem mine), increase legendary creatures' EXP (i.e., training area), and so forth can be built.
-* MANAGE BATTLE TEAM -> add and remove legendary creatures from your team. By default, the first legendary creature
+* <b>MANAGE BATTLE TEAM</b> -> add and remove legendary creatures from your team. By default, the first legendary creature
 appearing in the order the legendary creatures were added is the team leader.
-* MANAGE LEGENDARY CREATURE INVENTORY -> this allows you to remove legendary creatures which you do not use.
-* MANAGE ITEM INVENTORY -> sell items and/or level up runes in the item inventory.
-* MAKE A WISH -> gain random rewards (i.e., items or resources such as gold and gems) from making a wish using the 
+* <b>MANAGE LEGENDARY CREATURE INVENTORY</b> -> this allows you to remove legendary creatures which you do not use.
+* <b>MANAGE ITEM INVENTORY</b> -> sell items and/or level up runes in the item inventory.
+* <b>MAKE A WISH</b> -> gain random rewards (i.e., items or resources such as gold and gems) from making a wish using the 
 temple of wishes.
-* FUSE LEGENDARY CREATURES -> fuse multiple legendary creatures to gain a stronger one.
-* SUMMON LEGENDARY CREATURE -> use a scroll to summon a legendary creature which will be added to your legendary
+* <b>FUSE LEGENDARY CREATURES</b> -> fuse multiple legendary creatures to gain a stronger one.
+* <b>SUMMON LEGENDARY CREATURE</b> -> use a scroll to summon a legendary creature which will be added to your legendary
 creature inventory.
-* GIVE ITEM -> give an item to a legendary creature to strengthen that legendary creature.
-* POWER UP LEGENDARY CREATURE -> strengthen a legendary creature by sacrificing some other legendary creatures as 
+* <b>GIVE ITEM</b> -> give an item to a legendary creature to strengthen that legendary creature.
+* <b>POWER UP LEGENDARY CREATURE</b> -> strengthen a legendary creature by sacrificing some other legendary creatures as 
 power-up materials. This requires a power-up circle.
-* EVOLVE LEGENDARY CREATURE -> increase the rating of a legendary creature to make it able to reach higher levels. This 
+* <b>EVOLVE LEGENDARY CREATURE</b> -> increase the rating of a legendary creature to make it able to reach higher levels. This 
 also requires a power-up circle.
-* MANAGE TRAINING AREA -> add and remove legendary creatures from a training area in your player base.
-* PLACE RUNE -> place a rune in a legendary creature you have.
-* REMOVE RUNE -> remove a rune from a legendary creature you have.
-* BUY ITEM -> buy an item from the item shop.
-* VIEW STATS -> view your stats in the game (e.g., your level, EXP, amount of EXP you need to have to get to the 
+* <b>MANAGE TRAINING AREA</b> -> add and remove legendary creatures from a training area in your player base.
+* <b>PLACE RUNE</b> -> place a rune in a legendary creature you have.
+* <b>REMOVE RUNE</b> -> remove a rune from a legendary creature you have.
+* <b>BUY ITEM</b> -> buy an item from the item shop.
+* <b>VIEW STATS</b> -> view your stats in the game (e.g., your level, EXP, amount of EXP you need to have to get to the 
 next level, and so forth).
 
 Once you entered one of the actions above at the main menu and then press the button "ENTER" or "RETURN" on your machine, 

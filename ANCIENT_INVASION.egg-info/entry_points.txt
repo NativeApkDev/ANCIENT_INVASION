@@ -1,0 +1,3 @@
+[console_scripts]
+ANCIENT_INVASION = ANCIENT_INVASION.ancient_invasion:main
+

@@ -1,0 +1,10 @@
+README.md
+setup.cfg
+setup.py
+ANCIENT_INVASION/ancient_invasion.py
+ANCIENT_INVASION/ancient_invasion_tests.py
+ANCIENT_INVASION.egg-info/PKG-INFO
+ANCIENT_INVASION.egg-info/SOURCES.txt
+ANCIENT_INVASION.egg-info/dependency_links.txt
+ANCIENT_INVASION.egg-info/entry_points.txt
+ANCIENT_INVASION.egg-info/top_level.txt
