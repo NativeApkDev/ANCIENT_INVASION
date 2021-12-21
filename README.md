@@ -64,3 +64,23 @@ obstacles can be removed; and buildings to strengthen legendary creatures (e.g.,
 * MANAGE BATTLE TEAM -> add and remove legendary creatures from your team. By default, the first legendary creature
 appearing in the order the legendary creatures were added is the team leader.
 * MANAGE LEGENDARY CREATURE INVENTORY -> this allows you to remove legendary creatures which you do not use.
+* MANAGE ITEM INVENTORY -> sell items and/or level up runes in the item inventory.
+* MAKE A WISH -> gain random rewards (i.e., items or resources such as gold and gems) from making a wish using the 
+temple of wishes.
+* FUSE LEGENDARY CREATURES -> fuse multiple legendary creatures to gain a stronger one.
+* SUMMON LEGENDARY CREATURE -> use a scroll to summon a legendary creature which will be added to your legendary
+creature inventory.
+* GIVE ITEM -> give an item to a legendary creature to strengthen that legendary creature.
+* POWER UP LEGENDARY CREATURE -> strengthen a legendary creature by sacrificing some other legendary creatures as 
+power-up materials. This requires a power-up circle.
+* EVOLVE LEGENDARY CREATURE -> increase the rating of a legendary creature to make it able to reach higher levels. This 
+also requires a power-up circle.
+* MANAGE TRAINING AREA -> add and remove legendary creatures from a training area in your player base.
+* PLACE RUNE -> place a rune in a legendary creature you have.
+* REMOVE RUNE -> remove a rune from a legendary creature you have.
+* BUY ITEM -> buy an item from the item shop.
+* VIEW STATS -> view your stats in the game (e.g., your level, EXP, amount of EXP you need to have to get to the 
+next level, and so forth).
+
+Once you entered one of the actions above at the main menu and then press the button "ENTER" or "RETURN" on your machine, 
+further instructions of what you need to do will be shown on the command line interface.
