@@ -101,42 +101,42 @@ class MyTestCase(unittest.TestCase):
     ################################################################################################################
     # Tests in loading users' data from the newly saved files to check whether correct data is represented or not
     def test_load_user_01(self):
-        user1_data: Game = load_game_data("SAVED_DATA/SAVED ANCIENT INVASION GAME DATA - PLAYER 1")
+        user1_data: Game = load_game_data("SAVED ANCIENT INVASION GAME DATA - PLAYER 1")
         user1: Player = user1_data.player_data
         self.assertEquals(user1.name, "player 1")
         self.assertEquals(user1.level, 1)
         self.assertEquals(len(user1.item_inventory.get_items()), 0)
 
     def test_load_user_02(self):
-        user2_data: Game = load_game_data("SAVED_DATA/SAVED ANCIENT INVASION GAME DATA - PLAYER 2")
+        user2_data: Game = load_game_data("SAVED ANCIENT INVASION GAME DATA - PLAYER 2")
         user2: Player = user2_data.player_data
         self.assertEquals(user2.name, "player 2")
         self.assertEquals(user2.level, 1)
         self.assertEquals(len(user2.item_inventory.get_items()), 1)
 
     def test_load_user_03(self):
-        user3_data: Game = load_game_data("SAVED_DATA/SAVED ANCIENT INVASION GAME DATA - PLAYER 3")
+        user3_data: Game = load_game_data("SAVED ANCIENT INVASION GAME DATA - PLAYER 3")
         user3: Player = user3_data.player_data
         self.assertEquals(user3.name, "player 3")
         self.assertEquals(user3.level, 1)
         self.assertEquals(len(user3.item_inventory.get_items()), 0)
 
     def test_load_user_04(self):
-        user4_data: Game = load_game_data("SAVED_DATA/SAVED ANCIENT INVASION GAME DATA - PLAYER 4")
+        user4_data: Game = load_game_data("SAVED ANCIENT INVASION GAME DATA - PLAYER 4")
         user4: Player = user4_data.player_data
         self.assertEquals(user4.name, "player 4")
         self.assertEquals(user4.level, 1)
         self.assertEquals(len(user4.item_inventory.get_items()), 1)
 
     def test_load_user_05(self):
-        user5_data: Game = load_game_data("SAVED_DATA/SAVED ANCIENT INVASION GAME DATA - PLAYER 5")
+        user5_data: Game = load_game_data("SAVED ANCIENT INVASION GAME DATA - PLAYER 5")
         user5: Player = user5_data.player_data
         self.assertEquals(user5.name, "player 5")
         self.assertEquals(user5.level, 1)
         self.assertEquals(len(user5.item_inventory.get_items()), 2)
 
     def test_load_user_06(self):
-        user6_data: Game = load_game_data("SAVED_DATA/SAVED ANCIENT INVASION GAME DATA - PLAYER 6")
+        user6_data: Game = load_game_data("SAVED ANCIENT INVASION GAME DATA - PLAYER 6")
         user6: Player = user6_data.player_data
         self.assertEquals(user6.name, "player 6")
         self.assertEquals(user6.level, 1)
@@ -147,7 +147,7 @@ class MyTestCase(unittest.TestCase):
         self.assertEquals(len(user6.legendary_creature_inventory.get_legendary_creatures()), 0)
 
     def test_load_user_07(self):
-        user7_data: Game = load_game_data("SAVED_DATA/SAVED ANCIENT INVASION GAME DATA - PLAYER 7")
+        user7_data: Game = load_game_data("SAVED ANCIENT INVASION GAME DATA - PLAYER 7")
         user7: Player = user7_data.player_data
         self.assertEquals(user7.name, "player 7")
         self.assertEquals(user7.level, 1)
@@ -158,7 +158,7 @@ class MyTestCase(unittest.TestCase):
         self.assertEquals(len(user7.legendary_creature_inventory.get_legendary_creatures()), 1)
 
     def test_load_user_08(self):
-        user8_data: Game = load_game_data("SAVED_DATA/SAVED ANCIENT INVASION GAME DATA - PLAYER 8")
+        user8_data: Game = load_game_data("SAVED ANCIENT INVASION GAME DATA - PLAYER 8")
         user8: Player = user8_data.player_data
         self.assertEquals(user8.name, "player 8")
         self.assertEquals(user8.level, 1)
@@ -169,7 +169,7 @@ class MyTestCase(unittest.TestCase):
         self.assertEquals(len(user8.legendary_creature_inventory.get_legendary_creatures()), 0)
 
     def test_load_user_09(self):
-        user9_data: Game = load_game_data("SAVED_DATA/SAVED ANCIENT INVASION GAME DATA - PLAYER 9")
+        user9_data: Game = load_game_data("SAVED ANCIENT INVASION GAME DATA - PLAYER 9")
         user9: Player = user9_data.player_data
         self.assertEquals(user9.name, "player 9")
         self.assertEquals(user9.level, 1)
@@ -181,7 +181,7 @@ class MyTestCase(unittest.TestCase):
         self.assertEquals(len(user9.legendary_creature_inventory.get_legendary_creatures()[0].get_runes().values()), 2)
 
     def test_load_user_10(self):
-        user10_data: Game = load_game_data("SAVED_DATA/SAVED ANCIENT INVASION GAME DATA - PLAYER 10")
+        user10_data: Game = load_game_data("SAVED ANCIENT INVASION GAME DATA - PLAYER 10")
         user10: Player = user10_data.player_data
         self.assertEquals(user10.name, "player 10")
         self.assertEquals(user10.level, 1)
@@ -193,7 +193,7 @@ class MyTestCase(unittest.TestCase):
         self.assertEquals(len(user10.legendary_creature_inventory.get_legendary_creatures()[0].get_runes().values()), 1)
 
     def test_load_user_11(self):
-        user11_data: Game = load_game_data("SAVED_DATA/SAVED ANCIENT INVASION GAME DATA - PLAYER 11")
+        user11_data: Game = load_game_data("SAVED ANCIENT INVASION GAME DATA - PLAYER 11")
         user11: Player = user11_data.player_data
         self.assertEquals(user11.name, "player 11")
         self.assertEquals(user11.level, 1)
@@ -206,7 +206,7 @@ class MyTestCase(unittest.TestCase):
         self.assertEquals(len(user11.battle_team.get_legendary_creatures()), 1)
 
     def test_load_user_12(self):
-        user12_data: Game = load_game_data("SAVED_DATA/SAVED ANCIENT INVASION GAME DATA - PLAYER 12")
+        user12_data: Game = load_game_data("SAVED ANCIENT INVASION GAME DATA - PLAYER 12")
         user12: Player = user12_data.player_data
         self.assertEquals(user12.name, "player 12")
         self.assertEquals(user12.level, 1)
@@ -217,7 +217,7 @@ class MyTestCase(unittest.TestCase):
         self.assertEquals(len(user12.legendary_creature_inventory.get_legendary_creatures()), 0)
 
     def test_load_user_13(self):
-        user13_data: Game = load_game_data("SAVED_DATA/SAVED ANCIENT INVASION GAME DATA - PLAYER 13")
+        user13_data: Game = load_game_data("SAVED ANCIENT INVASION GAME DATA - PLAYER 13")
         user13: Player = user13_data.player_data
         self.assertEquals(user13.name, "player 13")
         self.assertEquals(user13.level, 1)
@@ -230,7 +230,7 @@ class MyTestCase(unittest.TestCase):
         self.assertEquals(len(user13.legendary_creature_inventory.get_legendary_creatures()[0].get_runes().values()), 1)
 
     def test_load_user_14(self):
-        user14_data: Game = load_game_data("SAVED_DATA/SAVED ANCIENT INVASION GAME DATA - PLAYER 14")
+        user14_data: Game = load_game_data("SAVED ANCIENT INVASION GAME DATA - PLAYER 14")
         user14: Player = user14_data.player_data
         self.assertEquals(user14.name, "player 14")
         condition1: bool = user14.level == 1 or user14.level == 2

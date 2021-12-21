@@ -4104,7 +4104,7 @@ def main():
     # Initialising variable for the saved game data
     # Asking the user to enter his/her name to check whether saved game data exists or not
     player_name: str = input("Please enter your name: ")
-    file_name: str = "SAVED_DATA/SAVED ANCIENT INVASION GAME DATA - " + str(player_name).upper()
+    file_name: str = "SAVED ANCIENT INVASION GAME DATA - " + str(player_name).upper()
 
     new_game: Game
     try:
