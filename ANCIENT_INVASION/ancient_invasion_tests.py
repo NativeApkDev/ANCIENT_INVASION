@@ -241,15 +241,15 @@ class MyTestCase(unittest.TestCase):
     ################################################################################################################
     # Checking whether the number of saved data files is correct or not
     def test_number_of_files(self):
-        self.assertEquals(len(os.listdir("SAVED_DATA")), 14)
+        self.assertEquals(len([filename for filename in os.listdir(".") if filename[0:5] == "SAVED"]), 14)
 
     ################################################################################################################
-    # Delete all files from directory "SAVED_DATA" after test execution is complete. This is to ensure that all
-    # other test cases pass
+    # Delete all the created files with "SAVED DATA" in their name from the directory "ANCIENT_INVASION" in the
+    # project after test execution is complete. This is to ensure that all other test cases pass
     def test_remove_all_files(self):
-        files = glob.glob('SAVED_DATA/*')
-        for f in files:
-            os.remove(f)
+        for f in os.listdir("."):
+            if f[0:5] == "SAVED":
+                os.remove(f)
 
 
 if __name__ == '__main__':

@@ -1846,6 +1846,11 @@ class Team:
         self.leader: LegendaryCreature or None = None if len(self.__legendary_creatures) == 0 else \
             self.__legendary_creatures[0]
 
+    def set_leader(self):
+        # type: () -> None
+        self.leader = None if len(self.__legendary_creatures) == 0 else \
+            self.__legendary_creatures[0]
+
     def __str__(self):
         res: str = "Team(leader=" + str(self.leader.name) + ", legendary_creatures=[" if self.leader is not None else \
             "Team(leader=None, legendary_creatures=["
@@ -1874,6 +1879,7 @@ class Team:
         # type: (LegendaryCreature) -> bool
         if len(self.__legendary_creatures) < self.MAX_LEGENDARY_CREATURES:
             self.__legendary_creatures.append(legendary_creature)
+            self.set_leader()
             return True
         return False
 
@@ -1881,6 +1887,7 @@ class Team:
         # type: (LegendaryCreature) -> bool
         if legendary_creature in self.__legendary_creatures:
             self.__legendary_creatures.remove(legendary_creature)
+            self.set_leader()
             return True
         return False
 
@@ -4974,7 +4981,7 @@ def main():
                     to_be_removed: LegendaryCreature = \
                         new_game.player_data.legendary_creature_inventory.get_legendary_creatures() \
                             [legendary_creature_index - 1]
-                    new_game.player_data.legendary_creature_inventory.remove_legendary_creature(to_be_removed)
+                    new_game.player_data.remove_legendary_creature(to_be_removed)
 
             elif action == "MANAGE BATTLE TEAM":
                 # Clearing up the command line window
@@ -5010,7 +5017,7 @@ def main():
 
                         to_be_removed: LegendaryCreature = new_game.player_data.battle_team.get_legendary_creatures() \
                             [legendary_creature_index - 1]
-                        new_game.player_data.battle_team.remove_legendary_creature(to_be_removed)
+                        new_game.player_data.remove_legendary_creature_from_team(to_be_removed)
 
                 if len(new_game.player_data.battle_team.get_legendary_creatures()) < Team.MAX_LEGENDARY_CREATURES:
                     print("Below is a list of legendary creatures you have.\n")
@@ -5043,7 +5050,7 @@ def main():
                         to_be_added: LegendaryCreature = \
                             new_game.player_data.legendary_creature_inventory.get_legendary_creatures() \
                                 [legendary_creature_index - 1]
-                        new_game.player_data.battle_team.add_legendary_creature(to_be_added)
+                        new_game.player_data.add_legendary_creature_to_team(to_be_added)
 
             elif action == "MANAGE PLAYER BASE":
                 # Clearing up the command line window
