@@ -16,6 +16,10 @@ https://github.com/NativeApkDev/ANCIENT_INVASION/blob/master/ANCIENT_INVASION/di
 Python code used to create the game is available in 
 https://github.com/NativeApkDev/ANCIENT_INVASION/blob/master/ANCIENT_INVASION/ancient_invasion.py.
 
+# Installation
+
+Enter the command "pip install ANCIENT_INVASION".
+
 # Unit Tests
 
 Python unit tests created using Python's "unittest" module, testing basic functionalities of the game is available in 
